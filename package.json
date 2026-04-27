@@ -1,0 +1,35 @@
+{
+  "name": "ask-marcel-office-cli",
+  "module": "src/main.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/main.ts",
+    "lint": "eslint --cache",
+    "lint:strict": "LINT_STRICT=1 eslint",
+    "typecheck": "tsc --noEmit",
+    "coverage": "bun run scripts/check-coverage.ts",
+    "mutate": "stryker run",
+    "mutate:changed": "bash scripts/mutate-changed.sh",
+    "mutate:staged": "bash scripts/mutate-staged.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "@stryker-mutator/core": "^9.6.1",
+    "@types/bun": "^1.2.0",
+    "eslint": "^9.28.0",
+    "eslint-plugin-prettier": "^5.4.1",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-sonarjs": "^4.0.3",
+    "eslint-plugin-unicorn": "^59.0.1",
+    "typescript-eslint": "^8.33.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "commander": "^14.0.3",
+    "playwright": "^1.59.1",
+    "winston": "^3.19.0",
+    "zod": "^4.3.6"
+  }
+}
