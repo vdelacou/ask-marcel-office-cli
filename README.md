@@ -8,7 +8,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 
 | Command | Description |
 |---------|-------------|
-| `login` | Authenticate via device code flow (interactive) |
+| `login` | Authenticate (cached → refresh → browser fallback) |
 | `logout` | Clear cached tokens |
 
 ### OneDrive Files
@@ -158,7 +158,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 # Install
 bun install
 
-# Authenticate (device code flow — opens browser)
+# Authenticate (cached → refresh → browser fallback)
 bun run src/main.ts login
 
 # List drives
@@ -188,21 +188,23 @@ bun run src/main.ts --help
 ```
 src/
   domain/          — Result<T,E> type, utilities
-  infra/           — MSAL auth, Graph API HTTP client, Winston logger
+  infra/           — Auth recovery ladder (cache → refresh → Playwright browser), Graph API HTTP client, Winston logger
   use-cases/       — Commands (schemas + execute functions), ports
   composition/     — CLI wiring (Commander), dependency graph
   presenter/       — Compact JSON output formatting
 ```
 
-- **Auth**: Azure MSAL device code flow, file-based token cache (`~/.ask-marcel/token-cache.json`)
+- **Auth**: Three-rung recovery ladder — file-based cached JWT → OAuth refresh_token exchange → Playwright browser intercepting Teams login
 - **Client ID**: `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams Web)
-- **Scope**: `https://graph.microsoft.com/.default` (covers Files.Read.All + Sites.Read.All)
+- **Scopes**: `https://graph.microsoft.com/.default openid profile offline_access`
+- **Token cache**: `~/.ask-marcel/token-cache.json`
+- **Browser profile**: `~/.ask-marcel/browser-profile` (used by Playwright for persistent session)
 - **Output**: Compact JSON via `JSON.stringify` — no indentation, optimised for LLM token efficiency
 
 ## Quality gates
 
 ```bash
-bun test           # 22 tests
-bun run typecheck  # TypeScript
-bun run lint       # ESLint (0 warnings)
+bun test           # 254 tests
+bun run lint       # ESLint (0 warnings, 0 errors)
+bun run stryker    # Mutation testing (>90% break threshold)
 ```
