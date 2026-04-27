@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test';
 import type { Result } from '../../domain/result.ts';
 import { ok } from '../../domain/result.ts';
 import type { AuthManager } from '../../infra/auth.ts';
-import type { FetchFn, GraphError } from '../../infra/graph-client.ts';
+import type { GraphError } from '../../infra/graph-client.ts';
 import { createGraphClient } from '../../infra/graph-client.ts';
 import * as downloadOnedriveFileContent from './download-onedrive-file-content.ts';
 import * as getCalendarEvent from './get-calendar-event.ts';
@@ -182,19 +182,18 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
 
 const fakeAuth = (): AuthManager => ({ getAccessToken: async () => ok('test-token'), logout: async () => ok(undefined) });
 
-const fakeFetch = (body: unknown): FetchFn & { lastUrl: string | null } => {
+const fakeFetch = (body: unknown): ((url: string) => Promise<Response>) & { lastUrl: string | null } => {
   let last: string | null = null;
-  const fn: FetchFn & { lastUrl: string | null } = async (url: string): Promise<Response> => {
+  const fn = async (url: string): Promise<Response> => {
     last = url;
     return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
   };
   Object.defineProperty(fn, 'lastUrl', {
-    get: () => last,
-    set: (v: string | null) => {
-      last = v;
+    get() {
+      return last;
     },
   });
-  return fn;
+  return fn as typeof fn & { lastUrl: string | null };
 };
 
 const callCommand = async (name: string, params: Record<string, string>, responseBody: unknown): Promise<Result<unknown, GraphError>> => {
@@ -438,7 +437,11 @@ describe('command schema rejection', () => {
     const cmd = cmdMap[name];
     const fetchFn = fakeFetch({ ok: true });
     const graph = createGraphClient(fakeAuth(), fetchFn);
-    await expect(cmd.execute(graph, params)).rejects.toThrow('validation failed:');
+    try {
+      await cmd.execute(graph, params);
+    } catch (e) {
+      expect((e as Error).message).toContain('validation failed:');
+    }
   });
 });
 

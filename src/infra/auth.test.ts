@@ -51,7 +51,12 @@ describe('auth manager recovery ladder', () => {
   it('refreshes expired token when refresh_token exists', async () => {
     const mock = installFetchMock([
       {
-        match: (url, init) => url.includes('/token') && String(init?.body?.toString() ?? '').includes('refresh_token=old-refresh'),
+        match: (url, init) => {
+          let bodyStr = '';
+          if (typeof init?.body === 'string') bodyStr = init.body;
+          else if (init?.body instanceof URLSearchParams) bodyStr = init.body.toString();
+          return url.includes('/token') && bodyStr.includes('refresh_token=old-refresh');
+        },
         respond: () => {
           const future = Math.floor(Date.now() / 1000) + 3600;
           const header = btoa(JSON.stringify({ alg: 'RS256' }));

@@ -2,7 +2,7 @@ export const decodeJwtPayload = (token: string): Record<string, unknown> => {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return {};
-    const b64 = parts[1].replaceAll(/-/g, '+').replaceAll(/_/g, '/');
+    const b64 = parts[1].replaceAll('-', '+').replaceAll('_', '/');
     const padded = b64.padEnd(b64.length + ((4 - (b64.length % 4)) % 4), '=');
     return JSON.parse(Buffer.from(padded, 'base64').toString('utf-8')) as Record<string, unknown>;
   } catch {
