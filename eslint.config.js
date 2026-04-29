@@ -91,6 +91,19 @@ export default [
       'sonarjs/no-unused-vars': 'off',
       'sonarjs/no-empty-test-file': 'off',
       'sonarjs/cognitive-complexity': 'off',
+      // Disabled at the project level (atelier rule 15): TypeScript's strict
+      // mode + SonarJS recommended produces false positives on idiomatic
+      // patterns this codebase uses heavily.
+      // - `no-useless-intersection`: misfires on branded-type intersections
+      //   (`string & { __brand }`), the canonical atelier pattern.
+      // - `function-return-type`: misfires on factory functions that return
+      //   `Result<T, E>` since TS sees the union as multiple return shapes.
+      // - `null-dereference`: TypeScript itself enforces strict null checks;
+      //   SonarJS duplicates and routinely misfires (e.g., on `Object.keys()`
+      //   loop variables, `String.prototype.split` results, regex matches).
+      'sonarjs/no-useless-intersection': 'off',
+      'sonarjs/function-return-type': 'off',
+      'sonarjs/null-dereference': 'off',
     },
   },
   {

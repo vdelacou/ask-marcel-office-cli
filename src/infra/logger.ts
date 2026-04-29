@@ -10,9 +10,13 @@ const redactFormat = format((info) => {
   return info;
 });
 
-export const createWinstonLogger = (): Logger => {
+export type WinstonLoggerConfig = {
+  readonly logLevel?: string;
+};
+
+export const createWinstonLogger = (config: WinstonLoggerConfig = {}): Logger => {
   const winston = createLogger({
-    level: process.env.LOG_LEVEL ?? 'info',
+    level: config.logLevel ?? process.env.LOG_LEVEL ?? 'info',
     format: format.combine(redactFormat(), format.json()),
     transports: [new transports.Console()],
   });

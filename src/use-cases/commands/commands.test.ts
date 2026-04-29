@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'bun:test';
+import { accessTokenUnsafe } from '../../domain/access-token.ts';
 import type { Result } from '../../domain/result.ts';
 import { ok } from '../../domain/result.ts';
 import type { AuthManager } from '../../infra/auth.ts';
@@ -180,7 +181,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-channel-files-folder': getChannelFilesFolder,
 };
 
-const fakeAuth = (): AuthManager => ({ getAccessToken: async () => ok('test-token'), logout: async () => ok(undefined) });
+const fakeAuth = (): AuthManager => ({ getAccessToken: async () => ok(accessTokenUnsafe('test-token')), logout: async () => ok(undefined) });
 
 const fakeFetch = (body: unknown): ((url: string) => Promise<Response>) & { lastUrl: string | null } => {
   let last: string | null = null;

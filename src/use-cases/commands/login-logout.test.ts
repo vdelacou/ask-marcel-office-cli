@@ -12,7 +12,7 @@ describe('login command', () => {
 
   it('propagates auth errors', async () => {
     const fakeAuth = { getAccessToken: async () => err({ type: 'auth_cancelled' as const }), logout: async () => ok(undefined) };
-    const result = await login(fakeAuth as never);
+    const result = await login(fakeAuth);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.type).toBe('auth_cancelled');
   });

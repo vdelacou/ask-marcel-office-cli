@@ -7,11 +7,11 @@ import * as login from '../use-cases/commands/login.ts';
 import * as logout from '../use-cases/commands/logout.ts';
 import type { Logger } from '../use-cases/ports/logger.ts';
 
-const buildCli = (deps: { auth: AuthManager; graph: GraphClient; logger: Logger }): Command => {
-  const { auth, graph, logger } = deps;
+const buildCli = (deps: { auth: AuthManager; graph: GraphClient; logger: Logger; version?: string }): Command => {
+  const { auth, graph, logger, version } = deps;
   const program = new Command();
 
-  program.name('ask-marcel').description('Microsoft Graph CLI').version('0.0.1');
+  program.name('ask-marcel').description('Microsoft Graph CLI').version(version ?? '0.0.0');
 
   program
     .command('login')

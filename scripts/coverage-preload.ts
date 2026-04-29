@@ -1,14 +1,44 @@
+/*
+ * Coverage preload.
+ *
+ * `bun test --coverage` only reports rows for files the runner imports.
+ * Untested infra, composition, and presenter files are silently absent
+ * from the table, which makes the per-file gate trivially pass. This
+ * preload side-effect-imports every such file so they appear at 0% (or
+ * better) and the gate can fail loudly.
+ *
+ * Wired ONLY at coverage time, NOT in bunfig.toml. `scripts/check-coverage.ts`
+ * spawns `bun test --coverage --preload ./scripts/coverage-preload.ts`. We do
+ * NOT put `preload = [...]` under `[test]` in bunfig.toml because this file
+ * pulls in heavy third-party SDKs (HTTP clients, cloud SDKs, AI clients,
+ * loggers, etc. — whatever the infra adapters wrap) that would slow every
+ * plain `bun test` by 1–2s.
+ *
+ * MAINTENANCE RULE: every new file under
+ *   - src/infra/
+ *   - src/composition/
+ *   - src/presenter/
+ * must be side-effect-imported here in the SAME commit that adds the file.
+ * Reviewers check this explicitly. A pre-commit lint could enforce it; not
+ * done yet, so it is a review obligation.
+ *
+ * See skills/atelier/references/workflow.md for the full rationale.
+ */
+
+import '../src/domain/jwt-utils.ts';
 import '../src/infra/logger.ts';
 import '../src/infra/auth.ts';
-import '../src/infra/jwt-utils.ts';
 import '../src/infra/browser-auth.ts';
+import '../src/infra/filesystem-bun.ts';
+import '../src/infra/filesystem-node.ts';
 import '../src/infra/graph-client.ts';
+
+import '../src/index.ts';
 
 import '../src/composition/env.ts';
 import '../src/composition/build-deps.ts';
 import '../src/composition/cli.ts';
 
-import '../src/presenter/cli.ts';
 import '../src/presenter/output.ts';
 
 import '../src/use-cases/commands/search-sharepoint-sites.ts';

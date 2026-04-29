@@ -1,44 +1,32 @@
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import type { AccessToken } from '../domain/access-token.ts';
+import { accessToken } from '../domain/access-token.ts';
+import { decodeJwtPayload } from '../domain/jwt-utils.ts';
 import type { Result } from '../domain/result.ts';
 import { err, ok } from '../domain/result.ts';
+import type { FileSystem } from '../use-cases/ports/filesystem.ts';
 import type { Logger } from '../use-cases/ports/logger.ts';
 import type { BrowserAuth } from './browser-auth.ts';
 import { createBrowserAuth } from './browser-auth.ts';
-import { decodeJwtPayload, isGraphToken, isTokenFresh } from './jwt-utils.ts';
+import { createBunFileSystem } from './filesystem-bun.ts';
+import { createNodeFileSystem } from './filesystem-node.ts';
 
 type CachedToken = { access_token: string; expires_on: number; refresh_token: string };
 type AuthError = { type: 'auth_failed'; message: string } | { type: 'auth_cancelled' };
-type AuthManager = { getAccessToken: () => Promise<Result<string, AuthError>>; logout: () => Promise<Result<void, AuthError>> };
+type AuthManager = { getAccessToken: () => Promise<Result<AccessToken, AuthError>>; logout: () => Promise<Result<void, AuthError>> };
 
 const CLIENT_ID = '5e3ce6c0-2b1f-4285-8d4b-75ee78787346';
 const SCOPES = 'https://graph.microsoft.com/.default openid profile offline_access';
 const SPA_ORIGIN = 'https://teams.microsoft.com';
 const TEAMS_URL = 'https://teams.microsoft.com/';
 
-const readCache = (path: string): CachedToken | null => {
-  if (!existsSync(path)) return null;
-  try {
-    return JSON.parse(readFileSync(path, 'utf-8')) as CachedToken;
-  } catch {
-    return null;
-  }
-};
-
-const writeCache = (path: string, data: CachedToken): void => {
-  const dir = dirname(path);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(path, JSON.stringify(data));
-};
-
-const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, logger: Logger): AuthManager => {
-  const persist = (access: string, refresh: string | null): void => {
+const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, logger: Logger, fs: FileSystem): AuthManager => {
+  const persist = async (access: AccessToken, refresh: string | null): Promise<void> => {
     const claims = decodeJwtPayload(access);
     const exp = claims.exp as number | undefined;
-    writeCache(cachePath, { access_token: access, expires_on: exp ?? 0, refresh_token: refresh ?? '' });
+    await fs.writeText(cachePath, JSON.stringify({ access_token: access, expires_on: exp ?? 0, refresh_token: refresh ?? '' }));
   };
 
-  const refreshToken = async (cached: CachedToken): Promise<Result<string, AuthError>> => {
+  const refreshToken = async (cached: CachedToken): Promise<Result<AccessToken, AuthError>> => {
     const body = new URLSearchParams({ client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: cached.refresh_token, scope: SCOPES });
     let res: Response;
     try {
@@ -53,27 +41,23 @@ const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, l
     }
     if (!res.ok) return err({ type: 'auth_failed', message: `refresh failed (${res.status})` });
     const json = (await res.json()) as { access_token: string; expires_in: number; refresh_token?: string };
-    if (!json.access_token || !isTokenFresh(json.access_token) || !isGraphToken(json.access_token)) {
-      return err({ type: 'auth_failed', message: 'invalid token from refresh' });
-    }
+    const validated = accessToken(json.access_token ?? '');
+    if (!validated.ok) return err({ type: 'auth_failed', message: 'invalid token from refresh' });
     const token: CachedToken = {
-      access_token: json.access_token,
+      access_token: validated.value,
       expires_on: Math.floor(Date.now() / 1000) + json.expires_in,
       refresh_token: json.refresh_token ?? cached.refresh_token,
     };
-    writeCache(cachePath, token);
+    await fs.writeText(cachePath, JSON.stringify(token));
     logger.info('auth.ladder.rung', { rung: 'refresh' });
-    return ok(token.access_token);
+    return ok(validated.value);
   };
 
-  const acquireViaBrowser = async (): Promise<Result<string, AuthError>> => {
+  const acquireViaBrowser = async (): Promise<Result<AccessToken, AuthError>> => {
     try {
       const result = await browserAuth.acquireToken(SCOPES.split(' '), TEAMS_URL);
       if (!result) return err({ type: 'auth_cancelled' });
-      if (!isTokenFresh(result.accessToken) || !isGraphToken(result.accessToken)) {
-        return err({ type: 'auth_failed', message: 'invalid token from browser' });
-      }
-      persist(result.accessToken, result.refreshToken);
+      await persist(result.accessToken, result.refreshToken);
       logger.info('auth.ladder.rung', { rung: 'browser' });
       return ok(result.accessToken);
     } catch (e) {
@@ -82,11 +66,15 @@ const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, l
     }
   };
 
-  const getAccessToken = async (): Promise<Result<string, AuthError>> => {
-    const cached = readCache(cachePath);
-    if (cached && isTokenFresh(cached.access_token) && isGraphToken(cached.access_token)) {
-      logger.info('auth.ladder.rung', { rung: 'cache' });
-      return ok(cached.access_token);
+  const getAccessToken = async (): Promise<Result<AccessToken, AuthError>> => {
+    const cachedRead = await fs.readJson<CachedToken>(cachePath);
+    const cached = cachedRead.ok ? cachedRead.value : null;
+    if (cached) {
+      const validated = accessToken(cached.access_token);
+      if (validated.ok) {
+        logger.info('auth.ladder.rung', { rung: 'cache' });
+        return ok(validated.value);
+      }
     }
     if (cached?.refresh_token) {
       const refreshed = await refreshToken(cached);
@@ -97,11 +85,11 @@ const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, l
 
   const logout = async (): Promise<Result<void, AuthError>> => {
     try {
-      if (existsSync(cachePath)) unlinkSync(cachePath);
+      await fs.deleteIfExists(cachePath);
       await browserAuth.close();
       return ok(undefined);
     } catch (e) {
-      if (existsSync(cachePath)) unlinkSync(cachePath);
+      await fs.deleteIfExists(cachePath);
       return err({ type: 'auth_failed', message: e instanceof Error ? e.message : String(e) });
     }
   };
@@ -109,8 +97,10 @@ const createAuthManagerFromApi = (browserAuth: BrowserAuth, cachePath: string, l
   return { getAccessToken, logout };
 };
 
-const createAuthManager = (deps: { cachePath: string; logger: Logger }): AuthManager =>
-  createAuthManagerFromApi(createBrowserAuth({ logger: deps.logger }), deps.cachePath, deps.logger);
+const defaultFileSystem = (): FileSystem => (typeof globalThis.Bun !== 'undefined' ? createBunFileSystem() : createNodeFileSystem());
+
+const createAuthManager = (deps: { cachePath: string; logger: Logger; fs?: FileSystem }): AuthManager =>
+  createAuthManagerFromApi(createBrowserAuth({ logger: deps.logger, fs: deps.fs ?? defaultFileSystem() }), deps.cachePath, deps.logger, deps.fs ?? defaultFileSystem());
 
 export { createAuthManager, createAuthManagerFromApi };
 export type { AuthError, AuthManager };

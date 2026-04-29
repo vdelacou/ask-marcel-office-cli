@@ -152,42 +152,75 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-team-members` | List team members | `--team-id` |
 | `get-channel-files-folder` | Get channel files folder | `--team-id`, `--channel-id` |
 
-## Usage
+## Install
+
+Requires Node ≥20 **or** Bun ≥1.0 on the user's machine. Works on Windows, macOS, and Linux.
 
 ```bash
-# Install
-bun install
-
-# Authenticate (cached → refresh → browser fallback)
-bun run src/main.ts login
-
-# List drives
-bun run src/main.ts list-drives
-
-# Search for files
-bun run src/main.ts search-onedrive-files --drive-id abc123 --query "report"
-
-# Get Excel table data
-bun run src/main.ts list-excel-table-rows --drive-id abc123 --item-id xyz789 --table-id table1
-
-# Search SharePoint sites
-bun run src/main.ts search-sharepoint-sites
-
-# List SharePoint site lists
-bun run src/main.ts list-sharepoint-site-lists --site-id contoso.sharepoint.com,1234-5678
-
-# Clear tokens
-bun run src/main.ts logout
-
-# See all commands
-bun run src/main.ts --help
+npm i -g ask-marcel-office-cli      # any platform with Node
+# — or —
+bun add -g ask-marcel-office-cli    # any platform with Bun
 ```
+
+The first launch prints a one-time notice if a newer version is on npm; update with the same command above plus `@latest`.
+
+## Usage (CLI)
+
+```bash
+# authenticate (cached → refresh → browser fallback)
+ask-marcel login
+
+# list drives
+ask-marcel list-drives
+
+# search for files
+ask-marcel search-onedrive-files --drive-id abc123 --query "report"
+
+# get Excel table data
+ask-marcel list-excel-table-rows --drive-id abc123 --item-id xyz789 --table-id table1
+
+# search SharePoint sites
+ask-marcel search-sharepoint-sites
+
+# list SharePoint site lists
+ask-marcel list-sharepoint-site-lists --site-id contoso.sharepoint.com,1234-5678
+
+# clear tokens
+ask-marcel logout
+
+# see all commands
+ask-marcel --help
+```
+
+During development from a clone you can keep using `bun run src/main.ts <command>`.
+
+## Usage (library)
+
+The package exports a typed library API for embedding inside your own CLI, agent, or service.
+
+```ts
+import { commands, createGraphClient, buildDeps, type Result } from 'ask-marcel-office-cli';
+
+// option 1 — full ladder with built-in OAuth and file cache
+const { graph } = buildDeps();
+const result = await commands['list-drives'].execute(graph, {});
+if (result.ok) console.log(result.value);
+
+// option 2 — bring your own AuthManager / token
+const graph = createGraphClient({
+  getAccessToken: async () => ({ ok: true, value: process.env.MS_GRAPH_TOKEN as never }),
+  logout: async () => ({ ok: true, value: undefined }),
+});
+const me = await commands['get-current-user'].execute(graph, {});
+```
+
+The full export list (registry, factories, `Result`, branded types, ports) is in [src/index.ts](src/index.ts).
 
 ## Architecture
 
 ```
 src/
-  domain/          — Result<T,E> type, utilities
+  domain/          — Result<T,E>, branded value-object types (AccessToken, EnvVar), JWT utilities, format-error
   infra/           — Auth recovery ladder (cache → refresh → Playwright browser), Graph API HTTP client, Winston logger
   use-cases/       — Commands (schemas + execute functions), ports
   composition/     — CLI wiring (Commander), dependency graph
@@ -197,14 +230,38 @@ src/
 - **Auth**: Three-rung recovery ladder — file-based cached JWT → OAuth refresh_token exchange → Playwright browser intercepting Teams login
 - **Client ID**: `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams Web)
 - **Scopes**: `https://graph.microsoft.com/.default openid profile offline_access`
-- **Token cache**: `~/.ask-marcel/token-cache.json`
-- **Browser profile**: `~/.ask-marcel/browser-profile` (used by Playwright for persistent session)
+- **Token cache**: `~/.ask-marcel/token-cache.json` (overridable via `BuildDepsConfig.cachePath`)
+- **Browser profile**: `~/.ask-marcel/browser-profile` (overridable via `ASKMARCEL_BROWSER_PROFILE`)
 - **Output**: Compact JSON via `JSON.stringify` — no indentation, optimised for LLM token efficiency
 
-## Quality gates
+## Configuration
+
+Environment variables read at composition time:
+
+| Variable | Used by | Default |
+|---|---|---|
+| `LOG_LEVEL` | Winston logger | `info` |
+| `HOME` / `USERPROFILE` | Default cache and browser-profile paths | _(required)_ |
+| `ASKMARCEL_BROWSER_PROFILE` | Override Playwright user-data-dir | _(none)_ |
+
+`HTTP_PROXY` / `HTTPS_PROXY` / `http_proxy` / `https_proxy` are stripped from the process environment immediately before launching Playwright (see `src/infra/browser-auth.ts`).
+
+## Quality gates (atelier four-check loop)
 
 ```bash
-bun test           # 254 tests
+bun test           # 303 tests
 bun run lint       # ESLint (0 warnings, 0 errors)
-bun run stryker    # Mutation testing (>90% break threshold)
+bun run typecheck  # tsc --noEmit
+bun run coverage   # per-tier gates (100% domain + use-cases, 80% infra + composition + presenter)
+bun run mutate:changed  # mutation testing on changed domain/use-case files (>90% kill threshold)
 ```
+
+### Pre-commit hook (atelier 8 gates)
+
+The repo ships an 8-gate hook at `.githooks/pre-commit` (commit size → package.json → gitleaks → tests → strict lint → typecheck → coverage → mutation). Install once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Optional but recommended: install [gitleaks](https://github.com/gitleaks/gitleaks) (`brew install gitleaks`) to enable gate 3. The hook degrades gracefully if it's missing.

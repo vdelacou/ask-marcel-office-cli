@@ -1,56 +1,449 @@
-import { describe, expect, it } from 'bun:test';
+import { afterEach, describe, expect, it } from 'bun:test';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { createFileSystemFake } from '../test-helpers/filesystem-fake.ts';
 import { createLoggerFake } from '../test-helpers/logger-fake.ts';
-import type { BrowserAuthApi, BrowserTokenResult } from './browser-auth.ts';
-import { createBrowserAuthFromApi } from './browser-auth.ts';
+import type { BrowserAuthApi, BrowserAuthConfig, ContextLike, PageLike, ResponseLike } from './browser-auth.ts';
+import { createBrowserAuth, createBrowserAuthFromApi } from './browser-auth.ts';
+import { createBunFileSystem } from './filesystem-bun.ts';
 
-const fakeApi = (config?: { acquireResult?: BrowserTokenResult | null; acquireError?: Error }): BrowserAuthApi => ({
-  acquireToken: async () => {
-    if (config?.acquireError) throw config.acquireError;
-    return config?.acquireResult ?? null;
-  },
-  close: async () => {},
+const makeJwt = (claims: Record<string, unknown>): string => {
+  const header = btoa(JSON.stringify({ alg: 'RS256' }));
+  const payload = btoa(JSON.stringify(claims));
+  return `${header}.${payload}.sig`;
+};
+
+const graphTokenJwt = (): string => makeJwt({ exp: Math.floor(Date.now() / 1000) + 3600, aud: 'https://graph.microsoft.com' });
+
+const nonGraphTokenJwt = (): string => makeJwt({ exp: Math.floor(Date.now() / 1000) + 3600, aud: 'https://api.spaces.skype.com' });
+
+const expiredGraphTokenJwt = (): string => makeJwt({ exp: Math.floor(Date.now() / 1000) - 3600, aud: 'https://graph.microsoft.com' });
+
+const tokenResponse = (access: string, refresh: string | null = 'rt'): ResponseLike => ({
+  url: () => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+  headers: () => ({ 'content-type': 'application/json; charset=utf-8' }),
+  text: async () => JSON.stringify({ access_token: access, ...(refresh ? { refresh_token: refresh } : {}) }),
 });
 
-describe('createBrowserAuthFromApi', () => {
-  it('delegates acquireToken to the injected API', async () => {
-    const api = fakeApi({ acquireResult: { accessToken: 'test-token', refreshToken: 'refresh' } });
-    const logger = createLoggerFake();
-    const auth = createBrowserAuthFromApi(api, logger);
+const customResponse = (overrides: Partial<{ url: string; contentType: string; body: string }>): ResponseLike => ({
+  url: () => overrides.url ?? 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+  headers: () => ({ 'content-type': overrides.contentType ?? 'application/json' }),
+  text: async () => overrides.body ?? '{}',
+});
 
-    const result = await auth.acquireToken(['https://graph.microsoft.com/.default'], 'https://teams.microsoft.com');
-    expect(result).toEqual({ accessToken: 'test-token', refreshToken: 'refresh' });
-  });
+type FakePageOpts = {
+  responsesPerGoto?: ReadonlyArray<ReadonlyArray<ResponseLike>>;
+  urlsAfterGoto?: ReadonlyArray<string>;
+  gotoErrors?: ReadonlyArray<unknown>;
+};
 
-  it('returns null when the injected API returns null', async () => {
-    const api = fakeApi({ acquireResult: null });
-    const logger = createLoggerFake();
-    const auth = createBrowserAuthFromApi(api, logger);
+type FakePageState = { closed: boolean; evaluated: boolean; gotoCount: number };
 
-    const result = await auth.acquireToken(['https://graph.microsoft.com/.default'], 'https://teams.microsoft.com');
-    expect(result).toBeNull();
-  });
+const makeFakePage = (opts: FakePageOpts): { page: PageLike; state: FakePageState } => {
+  const state: FakePageState = { closed: false, evaluated: false, gotoCount: 0 };
+  let currentUrl = 'about:blank';
+  const handlers: Array<(r: ResponseLike) => void> = [];
 
-  it('delegates close to the injected API', async () => {
-    const api = fakeApi();
-    const logger = createLoggerFake();
-    const auth = createBrowserAuthFromApi(api, logger);
+  const page: PageLike = {
+    on: (event, handler) => {
+      if (event === 'response') handlers.push(handler);
+    },
+    goto: async (url) => {
+      const idx = state.gotoCount;
+      state.gotoCount += 1;
+      const queued = opts.responsesPerGoto?.[idx] ?? [];
+      for (const r of queued) for (const h of handlers) h(r);
+      currentUrl = opts.urlsAfterGoto?.[idx] ?? url;
+      const err = opts.gotoErrors?.[idx];
+      if (err !== undefined) throw err;
+    },
+    url: () => currentUrl,
+    evaluate: async () => {
+      state.evaluated = true;
+    },
+    close: async () => {
+      state.closed = true;
+    },
+  };
 
-    await auth.close();
-    const logs = logger.calls.filter((l) => l.event === 'browser_auth_close');
-    expect(logs.length).toBe(1);
-  });
+  return { page, state };
+};
 
-  it('returns null when the injected API throws', async () => {
-    const api: BrowserAuthApi = {
-      acquireToken: async () => {
-        throw new Error('browser crashed');
+type ChannelOutcome = { channel: 'msedge' | 'chrome' | undefined; outcome: 'fail' | 'ok' };
+
+type FakeApiOpts = {
+  channelOutcomes?: ReadonlyArray<ChannelOutcome>;
+  pageOpts?: FakePageOpts;
+  contextCloseThrows?: boolean;
+};
+
+type FakeApiState = {
+  contextClosed: boolean;
+  cookiesCleared: boolean;
+  page: FakePageState;
+};
+
+const makeFakeApi = (opts: FakeApiOpts = {}): { api: BrowserAuthApi; state: FakeApiState; getLaunchCount: () => number } => {
+  const outcomes = opts.channelOutcomes ?? [{ channel: 'msedge', outcome: 'ok' }];
+  let launchIdx = 0;
+  const { page, state: pageState } = makeFakePage(opts.pageOpts ?? {});
+  const state: FakeApiState = { contextClosed: false, cookiesCleared: false, page: pageState };
+
+  const context: ContextLike = {
+    newPage: async () => page,
+    clearCookies: async () => {
+      state.cookiesCleared = true;
+    },
+    close: async () => {
+      if (opts.contextCloseThrows) throw new Error('context close failed');
+      state.contextClosed = true;
+    },
+  };
+
+  const api: BrowserAuthApi = {
+    launchPersistentContext: async () => {
+      const idx = launchIdx;
+      launchIdx += 1;
+      const expected = outcomes[idx];
+      if (!expected) throw new Error(`fake out of channel outcomes (idx=${idx})`);
+      if (expected.outcome === 'fail') throw new Error('fake launch failed');
+      return context;
+    },
+  };
+
+  return { api, state, getLaunchCount: () => launchIdx };
+};
+
+let profileSeq = 0;
+
+const fastConfig = (overrides: Partial<BrowserAuthConfig> = {}): BrowserAuthConfig => {
+  profileSeq += 1;
+  return {
+    logger: createLoggerFake(),
+    fs: createFileSystemFake(),
+    trace: () => {},
+    profileDir: `/tmp/.atelier-fake-profile-${profileSeq}-${Date.now()}`,
+    initialSettleMs: 1,
+    postReloginSettleMs: 1,
+    pollIntervalMs: 1,
+    pollDeadlineMs: 30,
+    navigationTimeoutMs: 100,
+    ...overrides,
+  };
+};
+
+describe('browser auth — token capture orchestration', () => {
+  it('captures a Graph token fired during the initial navigation', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/common/oauth2/...'],
       },
-      close: async () => {},
-    };
-    const logger = createLoggerFake();
-    const auth = createBrowserAuthFromApi(api, logger);
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(result?.refreshToken).toBe('rt');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
 
-    const result = await auth.acquireToken(['https://graph.microsoft.com/.default'], 'https://teams.microsoft.com');
+  it('captures the Graph token even when the refresh token is absent', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt(), null)]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/common/oauth2/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(result?.refreshToken).toBeNull();
+  });
+
+  it('skips non-Graph and expired tokens before capturing the live Graph token', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(nonGraphTokenJwt()), tokenResponse(expiredGraphTokenJwt()), tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/common/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('forces a re-login when the page already has a Teams session, then captures the token after relogin', async () => {
+    const { api, state } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[], [tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://teams.microsoft.com/v2/', 'https://login.microsoftonline.com/oauth2/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(state.cookiesCleared).toBe(true);
+    expect(state.page.evaluated).toBe(true);
+    expect(state.page.gotoCount).toBe(2);
+  });
+
+  it('returns null when no token arrives before the polling deadline expires', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        urlsAfterGoto: ['https://login.microsoftonline.com/oauth2/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
     expect(result).toBeNull();
+  });
+
+  it('falls back to the chrome channel when msedge fails to launch', async () => {
+    const { api, getLaunchCount } = makeFakeApi({
+      channelOutcomes: [
+        { channel: 'msedge', outcome: 'fail' },
+        { channel: 'chrome', outcome: 'ok' },
+      ],
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(getLaunchCount()).toBe(2);
+  });
+
+  it('falls back to the bundled browser when msedge and chrome both fail to launch', async () => {
+    const { api, getLaunchCount } = makeFakeApi({
+      channelOutcomes: [
+        { channel: 'msedge', outcome: 'fail' },
+        { channel: 'chrome', outcome: 'fail' },
+        { channel: undefined, outcome: 'ok' },
+      ],
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(getLaunchCount()).toBe(3);
+  });
+
+  it('treats a non-Error navigation failure as non-fatal and returns null when no token arrives', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        gotoErrors: ['string-error'],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).toBeNull();
+  });
+
+  it('treats an Error navigation failure as non-fatal and returns null when no token arrives', async () => {
+    const { api } = makeFakeApi({
+      pageOpts: {
+        gotoErrors: [new Error('navigation timeout')],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).toBeNull();
+  });
+
+  it('survives an evaluate failure during force-relogin and continues to wait for the token', async () => {
+    const { page, state: pageState } = makeFakePage({
+      responsesPerGoto: [[], [tokenResponse(graphTokenJwt())]],
+      urlsAfterGoto: ['https://teams.microsoft.com/v2/', 'https://login.microsoftonline.com/...'],
+    });
+    page.evaluate = async () => {
+      throw new Error('storage cleared from inside an iframe');
+    };
+
+    const apiState: FakeApiState = { contextClosed: false, cookiesCleared: false, page: pageState };
+    const context: ContextLike = {
+      newPage: async () => page,
+      clearCookies: async () => {
+        apiState.cookiesCleared = true;
+      },
+      close: async () => {
+        apiState.contextClosed = true;
+      },
+    };
+    const api: BrowserAuthApi = {
+      launchPersistentContext: async () => context,
+    };
+
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(apiState.cookiesCleared).toBe(true);
+  });
+
+  it('survives a relogin-goto failure and still captures a token that arrives during the post-relogin settle', async () => {
+    const { api, state } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[], [tokenResponse(graphTokenJwt())]],
+        gotoErrors: [undefined, new Error('relogin nav timeout')],
+        urlsAfterGoto: ['https://teams.microsoft.com/v2/', 'https://teams.microsoft.com/v2/'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(state.page.gotoCount).toBe(2);
+  });
+
+  it('swallows a context.close failure during cleanup', async () => {
+    const { api } = makeFakeApi({
+      contextCloseThrows: true,
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+  });
+});
+
+describe('browser auth — response filter', () => {
+  const setup = (response: ResponseLike): ReturnType<typeof makeFakeApi> =>
+    makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[response, tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+
+  it('ignores responses from non-Microsoft URLs', async () => {
+    const { api } = setup(customResponse({ url: 'https://example.com/oauth/token' }));
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('ignores responses with non-JSON content type', async () => {
+    const { api } = setup(customResponse({ contentType: 'text/html' }));
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('ignores responses without an access_token field', async () => {
+    const { api } = setup(customResponse({ body: JSON.stringify({ id_token: 'foo' }) }));
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('ignores responses with malformed JSON bodies', async () => {
+    const { api } = setup(customResponse({ body: '{access_token: not-valid-json' }));
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('ignores access tokens that do not start with eyJ', async () => {
+    const { api } = setup(customResponse({ body: JSON.stringify({ access_token: 'opaque-token' }) }));
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+
+  it('ignores responses with a missing content-type header', async () => {
+    const noCtType: ResponseLike = {
+      url: () => 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+      headers: () => ({}),
+      text: async () => JSON.stringify({ access_token: graphTokenJwt() }),
+    };
+    const { api } = setup(noCtType);
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result?.accessToken.startsWith('eyJ')).toBe(true);
+  });
+});
+
+describe('browser auth — close lifecycle', () => {
+  it('logs and is a no-op when the context was never opened', async () => {
+    const { api } = makeFakeApi();
+    const logger = createLoggerFake();
+    const browser = createBrowserAuthFromApi(api, fastConfig({ logger }));
+    await browser.close();
+    expect(logger.calls.some((c) => c.event === 'browser_auth_close')).toBe(true);
+  });
+});
+
+describe('browser auth — profile directory & lock cleanup', () => {
+  let envBackup: string | undefined;
+  let tmp: string;
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ASKMARCEL_BROWSER_PROFILE;
+    else process.env.ASKMARCEL_BROWSER_PROFILE = envBackup;
+    if (tmp && existsSync(tmp)) rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('uses ASKMARCEL_BROWSER_PROFILE as the profile directory and cleans existing singleton locks', async () => {
+    tmp = mkdtempSync(join(tmpdir(), 'atelier-profile-env-'));
+    envBackup = process.env.ASKMARCEL_BROWSER_PROFILE;
+    process.env.ASKMARCEL_BROWSER_PROFILE = tmp;
+    writeFileSync(join(tmp, 'SingletonLock'), 'lock');
+    writeFileSync(join(tmp, 'SingletonCookie'), 'cookie');
+
+    const { api } = makeFakeApi({
+      pageOpts: {
+        responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+        urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+      },
+    });
+    const browser = createBrowserAuthFromApi(api, fastConfig({ profileDir: undefined, fs: createBunFileSystem() }));
+    await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+
+    expect(existsSync(join(tmp, 'SingletonLock'))).toBe(false);
+    expect(existsSync(join(tmp, 'SingletonCookie'))).toBe(false);
+  });
+
+  it('falls back to HOME-derived path when ASKMARCEL_BROWSER_PROFILE is not set', async () => {
+    tmp = mkdtempSync(join(tmpdir(), 'atelier-profile-home-'));
+    envBackup = process.env.ASKMARCEL_BROWSER_PROFILE;
+    delete process.env.ASKMARCEL_BROWSER_PROFILE;
+    const homeBackup = process.env.HOME;
+    const userProfileBackup = process.env.USERPROFILE;
+    process.env.HOME = tmp;
+    delete process.env.USERPROFILE;
+    try {
+      const { api } = makeFakeApi({
+        pageOpts: {
+          responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+          urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+        },
+      });
+      const browser = createBrowserAuthFromApi(api, fastConfig({ profileDir: undefined }));
+      const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+      expect(result).not.toBeNull();
+    } finally {
+      if (homeBackup === undefined) delete process.env.HOME;
+      else process.env.HOME = homeBackup;
+      if (userProfileBackup !== undefined) process.env.USERPROFILE = userProfileBackup;
+    }
+  });
+});
+
+describe('browser auth — production wiring', () => {
+  it('exposes a BrowserAuth port shape from the real createBrowserAuth factory', () => {
+    const logger = createLoggerFake();
+    const browser = createBrowserAuth({ logger });
+    expect(typeof browser.acquireToken).toBe('function');
+    expect(typeof browser.close).toBe('function');
   });
 });

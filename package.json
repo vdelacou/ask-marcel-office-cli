@@ -1,7 +1,55 @@
 {
   "name": "ask-marcel-office-cli",
-  "module": "src/main.ts",
+  "version": "0.1.0",
+  "description": "Microsoft Graph CLI + library — typed Bun/TypeScript wrapper around 100+ Graph API operations with browser-fallback OAuth.",
+  "license": "MIT",
+  "author": "Vincent Delacourt <vincent.delacourt@adama-development.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vdelacou/ask-marcel-office-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vdelacou/ask-marcel-office-cli/issues"
+  },
+  "homepage": "https://github.com/vdelacou/ask-marcel-office-cli#readme",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "ask-marcel": "./dist/cli.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20",
+    "bun": ">=1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "microsoft-graph",
+    "office-365",
+    "cli",
+    "bun",
+    "typescript",
+    "graph-api",
+    "outlook",
+    "teams",
+    "onedrive",
+    "sharepoint"
+  ],
   "scripts": {
     "start": "bun run src/main.ts",
     "lint": "eslint --cache",
@@ -10,25 +58,29 @@
     "coverage": "bun run scripts/check-coverage.ts",
     "mutate": "stryker run",
     "mutate:changed": "bash scripts/mutate-changed.sh",
-    "mutate:staged": "bash scripts/mutate-staged.sh"
+    "mutate:staged": "bash scripts/mutate-staged.sh",
+    "build:js": "bun build src/main.ts --target=node --outfile=dist/cli.js --format=esm --external playwright --external update-notifier && bun build src/index.ts --target=node --outfile=dist/index.js --format=esm --external playwright --external update-notifier",
+    "build:types": "tsc -p tsconfig.build.json",
+    "build": "rm -rf dist && bun run build:js && bun run build:types && bun run scripts/fix-dts-extensions.ts && bun run scripts/add-shebang.ts",
+    "prepublishOnly": "bun run build && bun test && bun run lint:strict && bun run typecheck && bun run coverage"
   },
   "devDependencies": {
     "@eslint/js": "^9.28.0",
     "@stryker-mutator/core": "^9.6.1",
     "@types/bun": "^1.2.0",
+    "@types/update-notifier": "^6.0.8",
     "eslint": "^9.28.0",
     "eslint-plugin-prettier": "^5.4.1",
     "eslint-plugin-security": "^3.0.1",
     "eslint-plugin-sonarjs": "^4.0.3",
     "eslint-plugin-unicorn": "^59.0.1",
+    "typescript": "^5.0.0",
     "typescript-eslint": "^8.33.1"
-  },
-  "peerDependencies": {
-    "typescript": "^5.0.0"
   },
   "dependencies": {
     "commander": "^14.0.3",
     "playwright": "^1.59.1",
+    "update-notifier": "^7.3.1",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
   }
