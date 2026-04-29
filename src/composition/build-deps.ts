@@ -31,7 +31,7 @@ const defaultProcessRunner = (): ProcessRunner => (typeof globalThis.Bun !== 'un
 export const buildDeps = (config: BuildDepsConfig = {}): BuiltDeps => {
   const home = config.home ?? process.env.HOME ?? process.env.USERPROFILE ?? '';
   const cachePath = config.cachePath ?? defaultCachePath(home);
-  const logLevel = config.logLevel ?? process.env.LOG_LEVEL ?? 'info';
+  const logLevel = config.logLevel ?? process.env.LOG_LEVEL ?? 'error';
   const fs = config.fs ?? defaultFileSystem();
   const processRunner = config.processRunner ?? defaultProcessRunner();
   const logger = createWinstonLogger({ logLevel });

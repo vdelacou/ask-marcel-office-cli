@@ -566,7 +566,7 @@ describe('browser auth — production wiring', () => {
     expect(logger.calls.some((c) => c.event === 'browser_auth_close')).toBe(true);
   });
 
-  it('falls back to writing trace messages to stderr when no trace is provided in config', async () => {
+  it('keeps stderr silent when no trace is provided in config (default trace is a no-op)', async () => {
     const original = process.stderr.write.bind(process.stderr);
     let captured = '';
     const swap = (chunk: string | Uint8Array): boolean => {
@@ -586,6 +586,6 @@ describe('browser auth — production wiring', () => {
     } finally {
       process.stderr.write = original;
     }
-    expect(captured).toContain('[DEBUG]');
+    expect(captured).not.toContain('[DEBUG]');
   });
 });

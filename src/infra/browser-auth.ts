@@ -99,7 +99,9 @@ const createPlaywrightApi = (loader: PlaywrightLoader): BrowserAuthApi => ({
 
 const createBrowserAuthFromApi = (api: BrowserAuthApi, config: BrowserAuthConfig): BrowserAuth => {
   const { logger, fs } = config;
-  const trace: TraceFn = config.trace ?? ((m) => process.stderr.write(m));
+  // Default to no-op so the CLI is silent on success. Pass an explicit
+  // trace (e.g., `(m) => process.stderr.write(m)`) for verbose debugging.
+  const trace: TraceFn = config.trace ?? (() => {});
   const profileDir = config.profileDir ?? defaultProfileDir();
   const initialSettleMs = config.initialSettleMs ?? 5000;
   const postReloginSettleMs = config.postReloginSettleMs ?? 3000;
