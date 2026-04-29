@@ -25,12 +25,17 @@ export { createGraphClient } from './infra/graph-client.ts';
 export type { FetchFn, GraphClient, GraphError } from './infra/graph-client.ts';
 export { createWinstonLogger } from './infra/logger.ts';
 export type { WinstonLoggerConfig } from './infra/logger.ts';
+export { createBunProcessRunner } from './infra/process-runner-bun.ts';
+export { createNodeProcessRunner } from './infra/process-runner-node.ts';
 
 export type { FileSystem, FileSystemError } from './use-cases/ports/filesystem.ts';
 export type { Logger, LogMeta } from './use-cases/ports/logger.ts';
+export type { ProcessRunner, ProcessRunnerError, ProcessRunResult } from './use-cases/ports/process-runner.ts';
 
 export { commands } from './use-cases/commands/index.ts';
 export type { Command, CommandExecute, CommandSchema } from './use-cases/commands/command-types.ts';
+export type { PackageManager, UpdateError } from './use-cases/commands/update.ts';
 
 export { buildDeps } from './composition/build-deps.ts';
-export type { BuildDepsConfig } from './composition/build-deps.ts';
+export type { BuildDepsConfig, BuiltDeps } from './composition/build-deps.ts';
+export { detectPackageManager } from './composition/package-manager.ts';

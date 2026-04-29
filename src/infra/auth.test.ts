@@ -4,7 +4,7 @@ import { ok } from '../domain/result.ts';
 import { installFetchMock } from '../test-helpers/fetch-mock.ts';
 import { createFileSystemFake } from '../test-helpers/filesystem-fake.ts';
 import { createLoggerFake } from '../test-helpers/logger-fake.ts';
-import { createAuthManagerFromApi } from './auth.ts';
+import { createAuthManager, createAuthManagerFromApi } from './auth.ts';
 import type { BrowserAuth, BrowserTokenResult } from './browser-auth.ts';
 
 const CACHE_PATH = '/virtual/token-cache.json';
@@ -173,5 +173,62 @@ describe('auth manager recovery ladder', () => {
       expect(result.error.message).toBe('close failed');
     }
     expect(fs.has(CACHE_PATH)).toBe(false);
+  });
+
+  it('returns auth_failed when the refresh-token fetch rejects with a network error', async () => {
+    const mock = installFetchMock([
+      {
+        match: () => true,
+        respond: () => {
+          throw new Error('connection reset');
+        },
+      },
+    ]);
+    afterEach(() => mock.restore());
+
+    const past = Math.floor(Date.now() / 1000) - 100;
+    const fs = createFileSystemFake();
+    fs.seed(CACHE_PATH, JSON.stringify({ access_token: 'expired-token', expires_on: past, refresh_token: 'old-refresh' }));
+
+    const logger = createLoggerFake();
+    const auth = createAuthManagerFromApi(fakeBrowserAuth({ acquireResult: null }), CACHE_PATH, logger, fs);
+
+    const result = await auth.getAccessToken();
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.type === 'auth_failed') {
+      expect(result.error.message).toBe('connection reset');
+    }
+  });
+
+  it('exposes an AuthManager port shape from the real createAuthManager production-wiring factory', () => {
+    const logger = createLoggerFake();
+    const auth = createAuthManager({ cachePath: CACHE_PATH, logger });
+    expect(typeof auth.getAccessToken).toBe('function');
+    expect(typeof auth.logout).toBe('function');
+  });
+
+  it('returns auth_failed with the stringified value when the refresh-token fetch rejects with a non-Error', async () => {
+    const mock = installFetchMock([
+      {
+        match: () => true,
+        respond: () => {
+          throw 'tcp_reset';
+        },
+      },
+    ]);
+    afterEach(() => mock.restore());
+
+    const past = Math.floor(Date.now() / 1000) - 100;
+    const fs = createFileSystemFake();
+    fs.seed(CACHE_PATH, JSON.stringify({ access_token: 'expired-token', expires_on: past, refresh_token: 'old-refresh' }));
+
+    const logger = createLoggerFake();
+    const auth = createAuthManagerFromApi(fakeBrowserAuth({ acquireResult: null }), CACHE_PATH, logger, fs);
+
+    const result = await auth.getAccessToken();
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.type === 'auth_failed') {
+      expect(result.error.message).toBe('tcp_reset');
+    }
   });
 });

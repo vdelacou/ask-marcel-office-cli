@@ -9,7 +9,7 @@ const ONE_WEEK_MS = 1000 * 60 * 60 * 24 * 7;
 const main = async (): Promise<void> => {
   updateNotifier({ pkg: { name: pkg.name, version: pkg.version }, updateCheckInterval: ONE_WEEK_MS }).notify({ defer: false });
   const deps = buildDeps();
-  const cli = buildCli({ auth: deps.auth, graph: deps.graph, logger: deps.logger, version: pkg.version });
+  const cli = buildCli({ auth: deps.auth, graph: deps.graph, logger: deps.logger, processRunner: deps.processRunner, version: pkg.version });
   await cli.parseAsync();
 };
 

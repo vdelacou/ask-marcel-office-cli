@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { createFileSystemFake } from '../test-helpers/filesystem-fake.ts';
 import { createLoggerFake } from '../test-helpers/logger-fake.ts';
 import type { BrowserAuthApi, BrowserAuthConfig, ContextLike, PageLike, ResponseLike } from './browser-auth.ts';
-import { createBrowserAuth, createBrowserAuthFromApi } from './browser-auth.ts';
+import { createBrowserAuth, createBrowserAuthFromApi, createPlaywrightApi } from './browser-auth.ts';
 import { createBunFileSystem } from './filesystem-bun.ts';
 
 const makeJwt = (claims: Record<string, unknown>): string => {
@@ -59,8 +59,13 @@ const makeFakePage = (opts: FakePageOpts): { page: PageLike; state: FakePageStat
       if (err !== undefined) throw err;
     },
     url: () => currentUrl,
-    evaluate: async () => {
+    evaluate: async (fn) => {
       state.evaluated = true;
+      // Invoke the page-side function so its body counts toward coverage. In
+      // a real browser it runs against `localStorage` / `sessionStorage`;
+      // here those globals do not exist, so the call throws synchronously
+      // and we mirror Playwright's behaviour by re-throwing.
+      fn();
     },
     close: async () => {
       state.closed = true;
@@ -314,6 +319,65 @@ describe('browser auth — token capture orchestration', () => {
     const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
     expect(result).not.toBeNull();
   });
+
+  it('swallows a page.close failure during cleanup', async () => {
+    const { page, state: pageState } = makeFakePage({
+      responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+      urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+    });
+    page.close = async () => {
+      throw new Error('page already detached');
+    };
+    const apiState: FakeApiState = { contextClosed: false, cookiesCleared: false, page: pageState };
+    const context: ContextLike = {
+      newPage: async () => page,
+      clearCookies: async () => {
+        apiState.cookiesCleared = true;
+      },
+      close: async () => {
+        apiState.contextClosed = true;
+      },
+    };
+    const api: BrowserAuthApi = { launchPersistentContext: async () => context };
+    const browser = createBrowserAuthFromApi(api, fastConfig());
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(apiState.contextClosed).toBe(true);
+  });
+
+  it('captures the token inside the polling loop when it arrives after both settles', async () => {
+    const handlers: Array<(r: ResponseLike) => void> = [];
+    const currentUrl = 'https://login.microsoftonline.com/oauth2/...';
+    let pageGotoCount = 0;
+    const fakePage: PageLike = {
+      on: (event, handler) => {
+        if (event === 'response') handlers.push(handler);
+      },
+      goto: async () => {
+        pageGotoCount += 1;
+      },
+      url: () => currentUrl,
+      evaluate: async () => {},
+      close: async () => {},
+    };
+    const fakeContext: ContextLike = {
+      newPage: async () => fakePage,
+      clearCookies: async () => {},
+      close: async () => {},
+    };
+    const api: BrowserAuthApi = {
+      launchPersistentContext: async () => fakeContext,
+    };
+
+    setTimeout(() => {
+      for (const h of handlers) h(tokenResponse(graphTokenJwt()));
+    }, 12);
+
+    const browser = createBrowserAuthFromApi(api, fastConfig({ initialSettleMs: 2, postReloginSettleMs: 2, pollIntervalMs: 4, pollDeadlineMs: 200 }));
+    const result = await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    expect(result).not.toBeNull();
+    expect(pageGotoCount).toBe(1);
+  });
 });
 
 describe('browser auth — response filter', () => {
@@ -445,5 +509,83 @@ describe('browser auth — production wiring', () => {
     const browser = createBrowserAuth({ logger });
     expect(typeof browser.acquireToken).toBe('function');
     expect(typeof browser.close).toBe('function');
+  });
+
+  it('strips proxy env vars before invoking the playwright loader', async () => {
+    const previousHttp = process.env.HTTP_PROXY;
+    const previousHttps = process.env.HTTPS_PROXY;
+    const previousLowerHttp = process.env.http_proxy;
+    const previousLowerHttps = process.env.https_proxy;
+    process.env.HTTP_PROXY = 'http://proxy.example:8080';
+    process.env.HTTPS_PROXY = 'https://proxy.example:8443';
+    process.env.http_proxy = 'http://proxy.example:8080';
+    process.env.https_proxy = 'https://proxy.example:8443';
+
+    const fakeContext: ContextLike = {
+      newPage: async () => ({}) as unknown as PageLike,
+      clearCookies: async () => {},
+      close: async () => {},
+    };
+    let loaderCalled = false;
+    let launchedDir = '';
+
+    const api = createPlaywrightApi(async () => {
+      loaderCalled = true;
+      return {
+        chromium: {
+          launchPersistentContext: async (dir) => {
+            launchedDir = dir;
+            return fakeContext;
+          },
+        },
+      };
+    });
+    const probeDir = join(tmpdir(), 'atelier-fake-playwright-probe');
+    const ctx = await api.launchPersistentContext(probeDir, { headless: false, args: [] });
+
+    try {
+      expect(loaderCalled).toBe(true);
+      expect(launchedDir).toBe(probeDir);
+      expect(ctx).toBe(fakeContext);
+      expect(process.env.HTTP_PROXY).toBeUndefined();
+      expect(process.env.HTTPS_PROXY).toBeUndefined();
+      expect(process.env.http_proxy).toBeUndefined();
+      expect(process.env.https_proxy).toBeUndefined();
+    } finally {
+      if (previousHttp !== undefined) process.env.HTTP_PROXY = previousHttp;
+      if (previousHttps !== undefined) process.env.HTTPS_PROXY = previousHttps;
+      if (previousLowerHttp !== undefined) process.env.http_proxy = previousLowerHttp;
+      if (previousLowerHttps !== undefined) process.env.https_proxy = previousLowerHttps;
+    }
+  });
+
+  it('logs an event when close() is called on the BrowserAuth port', async () => {
+    const logger = createLoggerFake();
+    const browser = createBrowserAuth({ logger });
+    await browser.close();
+    expect(logger.calls.some((c) => c.event === 'browser_auth_close')).toBe(true);
+  });
+
+  it('falls back to writing trace messages to stderr when no trace is provided in config', async () => {
+    const original = process.stderr.write.bind(process.stderr);
+    let captured = '';
+    const swap = (chunk: string | Uint8Array): boolean => {
+      captured += typeof chunk === 'string' ? chunk : new TextDecoder().decode(chunk);
+      return true;
+    };
+    process.stderr.write = swap;
+    try {
+      const { api } = makeFakeApi({
+        pageOpts: {
+          responsesPerGoto: [[tokenResponse(graphTokenJwt())]],
+          urlsAfterGoto: ['https://login.microsoftonline.com/...'],
+        },
+      });
+      const browser = createBrowserAuthFromApi(api, fastConfig({ trace: undefined }));
+      await browser.acquireToken(['scope'], 'https://teams.microsoft.com');
+    } finally {
+      process.stderr.write = original;
+    }
+    expect(captured).toContain('[DEBUG]');
   });
 });

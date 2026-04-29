@@ -3,6 +3,7 @@ import { accessTokenUnsafe } from '../domain/access-token.ts';
 import type { AuthError, AuthManager } from '../infra/auth.ts';
 import type { GraphClient, GraphError } from '../infra/graph-client.ts';
 import { createLoggerFake } from '../test-helpers/logger-fake.ts';
+import { createProcessRunnerFake } from '../test-helpers/process-runner-fake.ts';
 import { buildCli } from './cli.ts';
 
 const captureStream = async (stream: 'stdout' | 'stderr', run: () => void | Promise<unknown>): Promise<string> => {
@@ -48,42 +49,42 @@ const errGraph = (error: GraphError): GraphClient => ({
 describe('buildCli command surface', () => {
   it('renders an authenticated envelope when login succeeds', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger });
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
     expect(out).toContain('"status":"authenticated"');
   });
 
   it('renders an Authentication cancelled error when the user closes the browser', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: cancelledAuth(), graph: okGraph({}), logger });
+    const cli = buildCli({ auth: cancelledAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
     expect(out).toContain('Authentication cancelled');
   });
 
   it('renders the underlying message when login fails for a non-cancellation reason', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: failedAuth(), graph: okGraph({}), logger });
+    const cli = buildCli({ auth: failedAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
     expect(out).toContain('browser launch failed');
   });
 
   it('renders a logged_out envelope when logout succeeds', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger });
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'logout']));
     expect(out).toContain('"status":"logged_out"');
   });
 
   it('renders the underlying message when logout fails', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: failedAuth(), graph: okGraph({}), logger });
+    const cli = buildCli({ auth: failedAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'logout']));
     expect(out).toContain('rm denied');
   });
 
   it('runs a generic Graph command and renders the value as JSON', async () => {
     const logger = createLoggerFake();
-    const cli = buildCli({ auth: okAuth(), graph: okGraph({ displayName: 'Vincent' }), logger });
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({ displayName: 'Vincent' }), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'get-current-user']));
     expect(out).toContain('Vincent');
   });
@@ -94,8 +95,58 @@ describe('buildCli command surface', () => {
       auth: okAuth(),
       graph: errGraph({ type: 'api_error', status: 404, message: 'not found' }),
       logger,
+      processRunner: createProcessRunnerFake(),
     });
     const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'get-current-user']));
     expect(out).toContain('not found');
+  });
+
+  it('runs npm install when the user invokes `update` and the manager is npm', async () => {
+    const logger = createLoggerFake();
+    const runner = createProcessRunnerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: runner, packageManager: 'npm' });
+    const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'update']));
+    expect(runner.calls[0]).toEqual({ command: 'npm', args: ['i', '-g', 'ask-marcel-office-cli@latest'] });
+    expect(out).toContain('"status":"updated"');
+    expect(out).toContain('"via":"npm"');
+  });
+
+  it('runs `bun add -g` when the user invokes `update` and the manager is bun', async () => {
+    const logger = createLoggerFake();
+    const runner = createProcessRunnerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: runner, packageManager: 'bun' });
+    const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'update']));
+    expect(runner.calls[0]).toEqual({ command: 'bun', args: ['add', '-g', 'ask-marcel-office-cli@latest'] });
+    expect(out).toContain('"via":"bun"');
+  });
+
+  it('renders the install exit code when the update install exits non-zero', async () => {
+    const logger = createLoggerFake();
+    const runner = createProcessRunnerFake({ resultPerCall: [{ exitCode: 7 }] });
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: runner, packageManager: 'npm' });
+    const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'update']));
+    expect(out).toContain('exited with code 7');
+  });
+
+  it('renders the spawn-failed message when the update install cannot be spawned', async () => {
+    const logger = createLoggerFake();
+    const runner = createProcessRunnerFake({ throwOn: [0] });
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: runner, packageManager: 'npm' });
+    const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'update']));
+    expect(out).toContain('update failed');
+  });
+
+  it('auto-detects the package manager from the bin path when packageManager is not supplied', async () => {
+    const logger = createLoggerFake();
+    const runner = createProcessRunnerFake();
+    const previousArgv = process.argv[1];
+    process.argv[1] = '/Users/anyone/.bun/install/global/node_modules/ask-marcel-office-cli/dist/cli.js';
+    try {
+      const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: runner });
+      await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'update']));
+      expect(runner.calls[0]).toEqual({ command: 'bun', args: ['add', '-g', 'ask-marcel-office-cli@latest'] });
+    } finally {
+      process.argv[1] = previousArgv;
+    }
   });
 });

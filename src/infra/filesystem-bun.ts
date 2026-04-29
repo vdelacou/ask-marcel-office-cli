@@ -2,6 +2,8 @@ import { formatError } from '../domain/utilities/format-error.ts';
 import { err, ok } from '../domain/result.ts';
 import type { FileSystem } from '../use-cases/ports/filesystem.ts';
 
+const isMissingError = (e: unknown): boolean => e instanceof Error && (e as { code?: string }).code === 'ENOENT';
+
 export const createBunFileSystem = (): FileSystem => ({
   readJson: async <T>(path: string) => {
     const file = Bun.file(path);
@@ -21,12 +23,11 @@ export const createBunFileSystem = (): FileSystem => ({
     }
   },
   deleteIfExists: async (path) => {
-    const file = Bun.file(path);
-    if (!(await file.exists())) return ok(undefined);
     try {
-      await file.delete();
+      await Bun.file(path).delete();
       return ok(undefined);
     } catch (e) {
+      if (isMissingError(e)) return ok(undefined);
       return err({ type: 'io_failed', message: formatError(e) });
     }
   },

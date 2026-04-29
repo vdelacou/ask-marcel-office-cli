@@ -3,13 +3,14 @@ import { createFileSystemFake } from '../test-helpers/filesystem-fake.ts';
 import { buildDeps } from './build-deps.ts';
 
 describe('buildDeps composition root', () => {
-  it('wires logger, auth manager, and graph client when given an explicit cache path', () => {
+  it('wires logger, auth manager, graph client, and process runner when given an explicit cache path', () => {
     const fs = createFileSystemFake();
     const deps = buildDeps({ cachePath: '/virtual/cache.json', logLevel: 'error', fs });
     expect(typeof deps.logger.info).toBe('function');
     expect(typeof deps.auth.getAccessToken).toBe('function');
     expect(typeof deps.auth.logout).toBe('function');
     expect(typeof deps.graph.get).toBe('function');
+    expect(typeof deps.processRunner.runInherit).toBe('function');
   });
 
   it('falls back to a home-derived cache path when none is provided', () => {

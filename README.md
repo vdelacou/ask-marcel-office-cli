@@ -185,12 +185,17 @@ ask-marcel search-sharepoint-sites
 # list SharePoint site lists
 ask-marcel list-sharepoint-site-lists --site-id contoso.sharepoint.com,1234-5678
 
+# update to the latest version (auto-detects npm vs bun)
+ask-marcel update
+
 # clear tokens
 ask-marcel logout
 
 # see all commands
 ask-marcel --help
 ```
+
+`ask-marcel update` auto-detects whether the CLI was installed via npm or bun (based on the bin path) and reinstalls globally with the matching tool. You can still run the install manually: `npm i -g ask-marcel-office-cli@latest` or `bun add -g ask-marcel-office-cli@latest`.
 
 During development from a clone you can keep using `bun run src/main.ts <command>`.
 

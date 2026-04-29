@@ -71,4 +71,15 @@ describe('Bun filesystem adapter', () => {
     const result = await fs.deleteIfExists(join(tmp, 'never-existed.json'));
     expect(result.ok).toBe(true);
   });
+
+  it('returns io_failed when Bun.write cannot create the destination file', async () => {
+    const fs = createBunFileSystem();
+    // Make a regular file at `tmp/blocker`, then try to write to a path that
+    // requires `tmp/blocker` to be a directory. ENOTDIR fires the catch.
+    const blocker = join(tmp, 'blocker');
+    writeFileSync(blocker, 'I am a file, not a directory');
+    const result = await fs.writeText(join(blocker, 'sub.json'), 'payload');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.type).toBe('io_failed');
+  });
 });

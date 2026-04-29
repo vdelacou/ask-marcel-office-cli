@@ -32,8 +32,12 @@ import '../src/infra/browser-auth.ts';
 import '../src/infra/filesystem-bun.ts';
 import '../src/infra/filesystem-node.ts';
 import '../src/infra/graph-client.ts';
+import '../src/infra/process-runner-bun.ts';
+import '../src/infra/process-runner-node.ts';
 
 import '../src/index.ts';
+import '../src/composition/package-manager.ts';
+import '../src/use-cases/commands/update.ts';
 
 import '../src/composition/env.ts';
 import '../src/composition/build-deps.ts';

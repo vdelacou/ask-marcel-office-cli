@@ -33,14 +33,20 @@ type SkipRule = {
 const COVERAGE_RULES: ReadonlyArray<Tier> = [
   { name: 'domain', prefix: 'src/domain/', threshold: 100 },
   { name: 'use-cases', prefix: 'src/use-cases/', threshold: 100 },
-  { name: 'infra', prefix: 'src/infra/', threshold: 80 },
-  { name: 'composition', prefix: 'src/composition/', threshold: 80 },
-  { name: 'presenter', prefix: 'src/presenter/', threshold: 80 },
+  { name: 'infra', prefix: 'src/infra/', threshold: 100 },
+  { name: 'composition', prefix: 'src/composition/', threshold: 100 },
+  { name: 'presenter', prefix: 'src/presenter/', threshold: 100 },
 ];
 
 const SKIPPED: ReadonlyArray<SkipRule> = [
   { name: 'test-helpers', match: (p) => p.startsWith('src/test-helpers/') },
   { name: 'entry point', match: (p) => p === 'src/main.ts' },
+  // production-wiring: a one-line dynamic-import boundary to the `playwright`
+  // runtime dep. Cannot be unit-tested without launching a real browser.
+  // Documented at the top of the file itself.
+  { name: 'production-wiring', match: (p) => p === 'src/infra/playwright-loader.ts' },
+  // public library barrel: re-exports only — no executable logic to cover.
+  { name: 'library barrel', match: (p) => p === 'src/index.ts' },
 ];
 // NOTE: src/composition/build-deps.ts USED to be skipped here. It is now
 // fully unit-testable via the optional `BuildDepsConfig` argument pattern
