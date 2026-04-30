@@ -12,7 +12,14 @@ const meta: CommandMeta = {
   graphPathTemplate: '/drives/{drive-id}/items/{item-id}/versions',
   graphDocsUrl: 'https://learn.microsoft.com/en-us/graph/api/driveitem-list-versions',
   options: [
-    { name: 'drive-id', key: 'driveId', required: true, description: 'Microsoft Graph drive ID. Returned by `ask-marcel list-drives`.' },
+    {
+      name: 'drive-id',
+      key: 'driveId',
+      required: true,
+      description:
+        'Microsoft Graph drive ID. Use `ask-marcel list-drives` for the personal OneDrive, ' +
+        'or `ask-marcel list-sharepoint-site-drives --site-id <id>` for a SharePoint document library.',
+    },
     { name: 'item-id', key: 'itemId', required: true, description: 'driveItem ID of the file. Returned by `list-folder-files` or `search-onedrive-files`.' },
   ],
   example: "ask-marcel list-drive-item-versions --drive-id 'b!1234' --item-id '01ABC'",
