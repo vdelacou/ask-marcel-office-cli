@@ -58,9 +58,17 @@ const buildCli = (deps: BuildCliDeps): Command => {
     });
 
   for (const [name, cmd] of Object.entries(cmdRegistry)) {
-    const commandDef = program.command(name).description(`Graph API: ${name}`);
+    const description = cmd.meta?.summary ?? `Graph API: ${name}`;
+    const commandDef = program.command(name).description(description);
     const schemaKeys = getSchemaKeys(cmd.schema);
-    for (const key of schemaKeys) commandDef.requiredOption(`--${camelToKebab(key)} <value>`, key);
+    for (const key of schemaKeys) {
+      const optionMeta = cmd.meta?.options.find((o) => o.key === key);
+      commandDef.requiredOption(`--${camelToKebab(key)} <value>`, optionMeta?.description ?? key);
+    }
+    if (cmd.meta) {
+      const lines = [`\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`, `Microsoft Learn: ${cmd.meta.graphDocsUrl}`, `\nExample:\n  ${cmd.meta.example}`];
+      commandDef.addHelpText('after', lines.join('\n'));
+    }
     commandDef.action(async (opts: Record<string, string>) => {
       const result = await cmd.execute(graph, opts);
       if (result.ok) render(result.value, logger);

@@ -5,9 +5,32 @@ import type { GraphClient } from '../../infra/graph-client.ts';
 type CommandSchema = z.ZodType;
 type CommandExecute = (graph: GraphClient, params: Record<string, string>) => Promise<Result<unknown, import('../../infra/graph-client.ts').GraphError>>;
 
+type CommandCategory = 'auth' | 'drive' | 'excel' | 'sharepoint' | 'tasks' | 'mail' | 'notes' | 'user' | 'calendar' | 'contacts' | 'chats' | 'teams';
+
+type CommandHttpMethod = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+
+type CommandOptionMeta = {
+  readonly name: string;
+  readonly key: string;
+  readonly description: string;
+  readonly required: true;
+};
+
+type CommandMeta = {
+  readonly summary: string;
+  readonly category: CommandCategory;
+  readonly graphMethod: CommandHttpMethod;
+  readonly graphPathTemplate: string;
+  readonly graphDocsUrl: string;
+  readonly options: ReadonlyArray<CommandOptionMeta>;
+  readonly example: string;
+  readonly responseShape?: string;
+};
+
 type Command = {
   readonly schema: CommandSchema;
   readonly execute: CommandExecute;
+  readonly meta?: CommandMeta;
 };
 
-export type { Command, CommandExecute, CommandSchema };
+export type { Command, CommandCategory, CommandExecute, CommandHttpMethod, CommandMeta, CommandOptionMeta, CommandSchema };
