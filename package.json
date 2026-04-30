@@ -28,6 +28,7 @@
   },
   "files": [
     "dist/",
+    "docs/commands.json",
     "README.md",
     "LICENSE"
   ],
@@ -61,7 +62,8 @@
     "mutate:staged": "bash scripts/mutate-staged.sh",
     "build:js": "bun build src/main.ts --target=node --outfile=dist/cli.js --format=esm --external playwright --external update-notifier && bun build src/index.ts --target=node --outfile=dist/index.js --format=esm --external playwright --external update-notifier",
     "build:types": "tsc -p tsconfig.build.json",
-    "build": "rm -rf dist && bun run build:js && bun run build:types && bun run scripts/fix-dts-extensions.ts && bun run scripts/add-shebang.ts",
+    "docs:gen": "bun run scripts/gen-docs.ts",
+    "build": "rm -rf dist && bun run docs:gen && bun run build:js && bun run build:types && bun run scripts/fix-dts-extensions.ts && bun run scripts/add-shebang.ts && cp docs/commands.json dist/commands.json",
     "prepublishOnly": "bun run build && bun test && bun run lint:strict && bun run typecheck && bun run coverage"
   },
   "devDependencies": {

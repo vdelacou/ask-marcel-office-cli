@@ -1,0 +1,1691 @@
+{
+  "package": "ask-marcel-office-cli",
+  "version": "0.1.2",
+  "generatedAt": "2026-04-30T03:50:39.843Z",
+  "commands": [
+    {
+      "name": "download-onedrive-file-content",
+      "summary": "Download (or follow the redirect to) the binary content of a file stored in OneDrive / SharePoint.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/content",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-get-content",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the file to download. Returned by `ask-marcel list-folder-files` or `search-onedrive-files`."
+        }
+      ],
+      "example": "ask-marcel download-onedrive-file-content --drive-id 'b!1234' --item-id '01ABC'",
+      "responseShape": "binary content (or a 302 redirect to a pre-signed CDN URL)"
+    },
+    {
+      "name": "get-calendar-event",
+      "summary": "Fetch a single calendar event by ID from the signed-in user’s default calendar.",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/events/{event-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-get",
+      "options": [
+        {
+          "name": "event-id",
+          "key": "eventId",
+          "required": true,
+          "description": "Microsoft Graph event ID. Returned by `ask-marcel list-calendar-events` in the `id` field of each event."
+        }
+      ],
+      "example": "ask-marcel get-calendar-event --event-id 'AAMkAGI2THVS...'",
+      "responseShape": "single Microsoft Graph `event` resource"
+    },
+    {
+      "name": "get-calendar-view",
+      "summary": "List the calendar events in the signed-in user’s default calendar with recurrence expanded into individual occurrences. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendarView",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-calendarview",
+      "options": [],
+      "example": "ask-marcel get-calendar-view",
+      "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
+    },
+    {
+      "name": "get-channel-files-folder",
+      "summary": "Get the SharePoint files folder (driveItem) backing a Microsoft Teams channel’s `Files` tab.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/filesFolder",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-get-filesfolder",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        }
+      ],
+      "example": "ask-marcel get-channel-files-folder --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
+      "responseShape": "single Microsoft Graph `driveItem` resource (the channel’s files folder)"
+    },
+    {
+      "name": "get-channel-message",
+      "summary": "Get a single root message in a Microsoft Teams channel by ID.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-get",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
+        }
+      ],
+      "example": "ask-marcel get-channel-message --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
+      "responseShape": "single Microsoft Graph `chatMessage` resource"
+    },
+    {
+      "name": "get-channel-message-hosted-content",
+      "summary": "Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams channel message.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessagehostedcontent-get",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
+        },
+        {
+          "name": "chat-message-hosted-content-id",
+          "key": "chatMessageHostedContentId",
+          "required": true,
+          "description": "Hosted-content ID. Returned by `ask-marcel list-channel-message-hosted-contents`."
+        }
+      ],
+      "example": "ask-marcel get-channel-message-hosted-content --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123' --chat-message-hosted-content-id 'aWQ9...'",
+      "responseShape": "binary content (image / GIF / file bytes)"
+    },
+    {
+      "name": "get-chat",
+      "summary": "Get the metadata of a single Microsoft Teams chat (topic, type, members count, last update).",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-get",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        }
+      ],
+      "example": "ask-marcel get-chat --chat-id '19:abc...@thread.v2'",
+      "responseShape": "single Microsoft Graph `chat` resource"
+    },
+    {
+      "name": "get-chat-message",
+      "summary": "Get a single message in a Microsoft Teams chat by its ID.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-get",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
+        }
+      ],
+      "example": "ask-marcel get-chat-message --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
+      "responseShape": "single Microsoft Graph `chatMessage` resource"
+    },
+    {
+      "name": "get-chat-message-hosted-content",
+      "summary": "Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams chat message.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessagehostedcontent-get",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
+        },
+        {
+          "name": "chat-message-hosted-content-id",
+          "key": "chatMessageHostedContentId",
+          "required": true,
+          "description": "Hosted-content ID. Returned by `ask-marcel list-chat-message-hosted-contents`."
+        }
+      ],
+      "example": "ask-marcel get-chat-message-hosted-content --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123' --chat-message-hosted-content-id 'aWQ9...'",
+      "responseShape": "binary content (image / GIF / file bytes)"
+    },
+    {
+      "name": "get-current-user",
+      "summary": "Return the signed-in user’s Microsoft Graph profile (id, displayName, mail, jobTitle, etc.).",
+      "category": "user",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-get",
+      "options": [],
+      "example": "ask-marcel get-current-user",
+      "responseShape": "single Microsoft Graph `user` resource"
+    },
+    {
+      "name": "get-drive-delta",
+      "summary": "Get the incremental change set (added / modified / deleted items) under a OneDrive / SharePoint folder. Use the `@odata.deltaLink` from a previous response to resume.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/delta()",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-delta",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the folder whose subtree to track. Use the root folder ID from `get-drive-root-item` to track the entire drive."
+        }
+      ],
+      "example": "ask-marcel get-drive-delta --drive-id 'b!1234' --item-id '01ROOT'",
+      "responseShape": "collection of changed Microsoft Graph `driveItem` resources under `value[]` plus an `@odata.deltaLink` token"
+    },
+    {
+      "name": "get-drive-item",
+      "summary": "Get the metadata (driveItem resource) of a single file or folder in OneDrive / SharePoint.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-get",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID. Returned by `list-folder-files`, `search-onedrive-files`, or `get-drive-root-item`."
+        }
+      ],
+      "example": "ask-marcel get-drive-item --drive-id 'b!1234' --item-id '01ABC'",
+      "responseShape": "single Microsoft Graph `driveItem` resource"
+    },
+    {
+      "name": "get-drive-root-item",
+      "summary": "Get the root folder (driveItem) of a OneDrive / SharePoint drive.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/root",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-get",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives` in the `id` field."
+        }
+      ],
+      "example": "ask-marcel get-drive-root-item --drive-id 'b!1234'",
+      "responseShape": "single Microsoft Graph `driveItem` resource (the root folder)"
+    },
+    {
+      "name": "get-excel-range",
+      "summary": "Get the cell values, formulas, and formats of a specific Excel range (e.g. `A1:C10`).",
+      "category": "excel",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/workbook/worksheets/{worksheet-id}/range(address='{address}')",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/worksheet-range",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID containing the workbook. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the .xlsx file."
+        },
+        {
+          "name": "worksheet-id",
+          "key": "worksheetId",
+          "required": true,
+          "description": "Worksheet ID or worksheet name. Returned by `ask-marcel list-excel-worksheets`."
+        },
+        {
+          "name": "address",
+          "key": "address",
+          "required": true,
+          "description": "A1-style range address, e.g. `A1:C10` or a single cell like `B7`."
+        }
+      ],
+      "example": "ask-marcel get-excel-range --drive-id 'b!1234' --item-id '01XLSX' --worksheet-id 'Sheet1' --address 'A1:C10'",
+      "responseShape": "single Microsoft Graph `workbookRange` resource (values, formulas, format)"
+    },
+    {
+      "name": "get-excel-table",
+      "summary": "Get the metadata (style, header row, total row) of a single named Excel table.",
+      "category": "excel",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/workbook/tables/{table-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/workbooktable-get",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID containing the workbook. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the .xlsx file."
+        },
+        {
+          "name": "table-id",
+          "key": "tableId",
+          "required": true,
+          "description": "Workbook table ID or table name. Returned by `ask-marcel list-excel-tables`."
+        }
+      ],
+      "example": "ask-marcel get-excel-table --drive-id 'b!1234' --item-id '01XLSX' --table-id 'Table1'",
+      "responseShape": "single Microsoft Graph `workbookTable` resource"
+    },
+    {
+      "name": "get-mail-attachment",
+      "summary": "Get a single attachment on an Outlook message (metadata, plus the base64 `contentBytes` for file attachments).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/messages/{message-id}/attachments/{attachment-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/attachment-get",
+      "options": [
+        {
+          "name": "message-id",
+          "key": "messageId",
+          "required": true,
+          "description": "Outlook message ID. Returned by `ask-marcel list-mail-messages`."
+        },
+        {
+          "name": "attachment-id",
+          "key": "attachmentId",
+          "required": true,
+          "description": "Attachment ID. Returned by `ask-marcel list-mail-attachments`."
+        }
+      ],
+      "example": "ask-marcel get-mail-attachment --message-id 'AAMkAGI2...' --attachment-id 'AAMkABC...'",
+      "responseShape": "single Microsoft Graph `attachment` resource"
+    },
+    {
+      "name": "get-mail-message",
+      "summary": "Get a single Outlook message by ID, including subject, sender, body, and flags.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/messages/{message-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/message-get",
+      "options": [
+        {
+          "name": "message-id",
+          "key": "messageId",
+          "required": true,
+          "description": "Outlook message ID. Returned by `ask-marcel list-mail-messages` or `list-mail-folder-messages`."
+        }
+      ],
+      "example": "ask-marcel get-mail-message --message-id 'AAMkAGI2...'",
+      "responseShape": "single Microsoft Graph `message` resource"
+    },
+    {
+      "name": "get-mailbox-settings",
+      "summary": "Get the signed-in user’s Outlook mailbox settings (timezone, working hours, automatic replies).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/mailboxSettings",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-get-mailboxsettings",
+      "options": [],
+      "example": "ask-marcel get-mailbox-settings",
+      "responseShape": "single Microsoft Graph `mailboxSettings` resource"
+    },
+    {
+      "name": "get-my-profile-photo",
+      "summary": "Download the binary content of the signed-in user’s profile photo (largest available size).",
+      "category": "user",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/photo/$value",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/profilephoto-get",
+      "options": [],
+      "example": "ask-marcel get-my-profile-photo",
+      "responseShape": "binary image bytes (typically image/jpeg)"
+    },
+    {
+      "name": "get-onenote-page-content",
+      "summary": "Get the HTML body of a single OneNote page.",
+      "category": "notes",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/onenote/pages/{onenote-page-id}/content",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/page-get",
+      "options": [
+        {
+          "name": "onenote-page-id",
+          "key": "onenotePageId",
+          "required": true,
+          "description": "OneNote page ID. Returned by `ask-marcel list-onenote-section-pages`."
+        }
+      ],
+      "example": "ask-marcel get-onenote-page-content --onenote-page-id '1-abc...'",
+      "responseShape": "HTML string (the rendered page body)"
+    },
+    {
+      "name": "get-outlook-contact",
+      "summary": "Get a single personal Outlook contact by its ID.",
+      "category": "contacts",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/contacts/{contact-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/contact-get",
+      "options": [
+        {
+          "name": "contact-id",
+          "key": "contactId",
+          "required": true,
+          "description": "Outlook contact ID. Returned by `ask-marcel list-outlook-contacts`."
+        }
+      ],
+      "example": "ask-marcel get-outlook-contact --contact-id 'AAMkAGI2...'",
+      "responseShape": "single Microsoft Graph `contact` resource"
+    },
+    {
+      "name": "get-planner-bucket",
+      "summary": "Get the metadata of a single Microsoft Planner bucket (column / lane).",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/buckets/{planner-bucket-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannerbucket-get",
+      "options": [
+        {
+          "name": "planner-bucket-id",
+          "key": "plannerBucketId",
+          "required": true,
+          "description": "Planner bucket ID. Returned by `ask-marcel list-plan-buckets`."
+        }
+      ],
+      "example": "ask-marcel get-planner-bucket --planner-bucket-id 'sFNeQRFu_kqhxpwwAhmA15gAGfoT'",
+      "responseShape": "single Microsoft Graph `plannerBucket` resource"
+    },
+    {
+      "name": "get-planner-plan",
+      "summary": "Get the metadata of a single Microsoft Planner plan (title, owner group, container).",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/plans/{planner-plan-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannerplan-get",
+      "options": [
+        {
+          "name": "planner-plan-id",
+          "key": "plannerPlanId",
+          "required": true,
+          "description": "Planner plan ID. Returned in the `planId` field of any task from `ask-marcel list-planner-tasks`."
+        }
+      ],
+      "example": "ask-marcel get-planner-plan --planner-plan-id 'xqQg5FS2LkCp935s-FIFm5gAB6'",
+      "responseShape": "single Microsoft Graph `plannerPlan` resource"
+    },
+    {
+      "name": "get-planner-task",
+      "summary": "Get the metadata of a single Microsoft Planner task (title, assignees, dates, completion).",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/tasks/{planner-task-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannertask-get",
+      "options": [
+        {
+          "name": "planner-task-id",
+          "key": "plannerTaskId",
+          "required": true,
+          "description": "Planner task ID. Returned by `ask-marcel list-planner-tasks` or `list-plan-tasks`."
+        }
+      ],
+      "example": "ask-marcel get-planner-task --planner-task-id '01tx7Ic7-USXEwt0lvR1cmgAH8gK'",
+      "responseShape": "single Microsoft Graph `plannerTask` resource"
+    },
+    {
+      "name": "get-planner-task-details",
+      "summary": "Get the rich details (description, checklist, references) of a Microsoft Planner task.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/tasks/{planner-task-id}/details",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannertaskdetails-get",
+      "options": [
+        {
+          "name": "planner-task-id",
+          "key": "plannerTaskId",
+          "required": true,
+          "description": "Planner task ID. Returned by `ask-marcel list-planner-tasks` or `list-plan-tasks`."
+        }
+      ],
+      "example": "ask-marcel get-planner-task-details --planner-task-id '01tx7Ic7-USXEwt0lvR1cmgAH8gK'",
+      "responseShape": "single Microsoft Graph `plannerTaskDetails` resource"
+    },
+    {
+      "name": "get-sharepoint-site",
+      "summary": "Get the metadata of a single SharePoint site by its site ID.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/site-get",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Either the composite ID (`hostname,site-collection-id,site-id`) returned by `ask-marcel search-sharepoint-sites`, or the literal `root` to refer to the tenant root site."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site --site-id 'contoso.sharepoint.com,1234,5678'",
+      "responseShape": "single Microsoft Graph `site` resource"
+    },
+    {
+      "name": "get-sharepoint-site-by-path",
+      "summary": "Resolve a SharePoint subsite by its server-relative path under a parent site (e.g. `/teams/marketing`).",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/getByPath(path='{path}')",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/site-getbypath",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "Parent SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`, or the literal `root`."
+        },
+        {
+          "name": "path",
+          "key": "path",
+          "required": true,
+          "description": "Server-relative path of the subsite, including the leading slash (e.g. `/teams/marketing`)."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site-by-path --site-id 'root' --path '/teams/marketing'",
+      "responseShape": "single Microsoft Graph `site` resource"
+    },
+    {
+      "name": "get-sharepoint-site-drive-by-id",
+      "summary": "Get the metadata of a single document library (drive) on a SharePoint site by drive ID.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/drives/{drive-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/drive-get",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        },
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Drive (document library) ID on the site. Returned by `ask-marcel list-sharepoint-site-drives`."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site-drive-by-id --site-id 'contoso.sharepoint.com,1234,5678' --drive-id 'b!abcd'",
+      "responseShape": "single Microsoft Graph `drive` resource"
+    },
+    {
+      "name": "get-sharepoint-site-item",
+      "summary": "Get a single baseItem (page, root-level item, etc.) on a SharePoint site by ID.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/items/{base-item-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/baseitem-get",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        },
+        {
+          "name": "base-item-id",
+          "key": "baseItemId",
+          "required": true,
+          "description": "baseItem ID on the site. Returned by `ask-marcel list-sharepoint-site-items`."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site-item --site-id 'contoso.sharepoint.com,1234,5678' --base-item-id '17'",
+      "responseShape": "single Microsoft Graph `baseItem` resource"
+    },
+    {
+      "name": "get-sharepoint-site-list",
+      "summary": "Get the metadata (display name, template, columns) of a single SharePoint list.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/lists/{list-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/list-get",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        },
+        {
+          "name": "list-id",
+          "key": "listId",
+          "required": true,
+          "description": "SharePoint list ID or display name. Returned by `ask-marcel list-sharepoint-site-lists`."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site-list --site-id 'contoso.sharepoint.com,1234,5678' --list-id 'Documents'",
+      "responseShape": "single Microsoft Graph `list` resource"
+    },
+    {
+      "name": "get-sharepoint-site-list-item",
+      "summary": "Get a single row (listItem) of a SharePoint list by ID.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/lists/{list-id}/items/{list-item-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/listitem-get",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        },
+        {
+          "name": "list-id",
+          "key": "listId",
+          "required": true,
+          "description": "SharePoint list ID or display name. Returned by `ask-marcel list-sharepoint-site-lists`."
+        },
+        {
+          "name": "list-item-id",
+          "key": "listItemId",
+          "required": true,
+          "description": "listItem ID (typically a small integer). Returned by `ask-marcel list-sharepoint-site-list-items`."
+        }
+      ],
+      "example": "ask-marcel get-sharepoint-site-list-item --site-id 'contoso.sharepoint.com,1234,5678' --list-id 'Tasks' --list-item-id '7'",
+      "responseShape": "single Microsoft Graph `listItem` resource"
+    },
+    {
+      "name": "get-sharepoint-sites-delta",
+      "summary": "Get the incremental change set of SharePoint sites in the tenant. Use the `@odata.deltaLink` from a previous response to resume.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/delta()",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/site-delta",
+      "options": [],
+      "example": "ask-marcel get-sharepoint-sites-delta",
+      "responseShape": "collection of changed Microsoft Graph `site` resources under `value[]` plus an `@odata.deltaLink` token"
+    },
+    {
+      "name": "get-specific-calendar-event",
+      "summary": "Fetch a single calendar event by ID from a specific (non-default) calendar.",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/events/{event-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-get",
+      "options": [
+        {
+          "name": "calendar-id",
+          "key": "calendarId",
+          "required": true,
+          "description": "Calendar ID. Returned by `ask-marcel list-calendars`."
+        },
+        {
+          "name": "event-id",
+          "key": "eventId",
+          "required": true,
+          "description": "Event ID. Returned by `ask-marcel list-specific-calendar-events`."
+        }
+      ],
+      "example": "ask-marcel get-specific-calendar-event --calendar-id 'AAMkAGI2THVS...' --event-id 'AAMkABC...'",
+      "responseShape": "single Microsoft Graph `event` resource"
+    },
+    {
+      "name": "get-specific-calendar-view",
+      "summary": "List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences.",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/calendarView",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/calendar-list-calendarview",
+      "options": [
+        {
+          "name": "calendar-id",
+          "key": "calendarId",
+          "required": true,
+          "description": "Calendar ID. Returned by `ask-marcel list-calendars`."
+        }
+      ],
+      "example": "ask-marcel get-specific-calendar-view --calendar-id 'AAMkAGI2THVS...'",
+      "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
+    },
+    {
+      "name": "get-team",
+      "summary": "Get the metadata of a single Microsoft Team (display name, settings, member-settings, owner group).",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/team-get",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        }
+      ],
+      "example": "ask-marcel get-team --team-id 'abc-1234-...'",
+      "responseShape": "single Microsoft Graph `team` resource"
+    },
+    {
+      "name": "get-team-channel",
+      "summary": "Get the metadata of a single channel inside a Microsoft Team.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-get",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        }
+      ],
+      "example": "ask-marcel get-team-channel --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
+      "responseShape": "single Microsoft Graph `channel` resource"
+    },
+    {
+      "name": "get-todo-task",
+      "summary": "Get a single Microsoft To Do task by its ID and its parent list ID.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/todotask-get",
+      "options": [
+        {
+          "name": "todo-task-list-id",
+          "key": "todoTaskListId",
+          "required": true,
+          "description": "To Do task list ID. Returned by `ask-marcel list-todo-task-lists`."
+        },
+        {
+          "name": "todo-task-id",
+          "key": "todoTaskId",
+          "required": true,
+          "description": "To Do task ID. Returned by `ask-marcel list-todo-tasks`."
+        }
+      ],
+      "example": "ask-marcel get-todo-task --todo-task-list-id 'AAMkAGI...' --todo-task-id 'AAMkABC...'",
+      "responseShape": "single Microsoft Graph `todoTask` resource"
+    },
+    {
+      "name": "list-all-onenote-sections",
+      "summary": "List every OneNote section the signed-in user can see, across all notebooks.",
+      "category": "notes",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/onenote/sections",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/onenote-list-sections",
+      "options": [],
+      "example": "ask-marcel list-all-onenote-sections",
+      "responseShape": "collection of Microsoft Graph `onenoteSection` resources under `value[]`"
+    },
+    {
+      "name": "list-calendar-event-instances",
+      "summary": "List the individual occurrences of a recurring calendar event over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/events/{event-id}/instances",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-list-instances",
+      "options": [
+        {
+          "name": "calendar-id",
+          "key": "calendarId",
+          "required": true,
+          "description": "Calendar ID. Returned by `ask-marcel list-calendars`."
+        },
+        {
+          "name": "event-id",
+          "key": "eventId",
+          "required": true,
+          "description": "Recurring event ID. Returned by `ask-marcel list-specific-calendar-events`."
+        }
+      ],
+      "example": "ask-marcel list-calendar-event-instances --calendar-id 'AAMkAGI2THVS...' --event-id 'AAMkABC...'",
+      "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
+    },
+    {
+      "name": "list-calendar-events",
+      "summary": "List the events in the signed-in user’s default calendar (does not expand recurrences).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/events",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-events",
+      "options": [],
+      "example": "ask-marcel list-calendar-events",
+      "responseShape": "collection of Microsoft Graph `event` resources under `value[]`"
+    },
+    {
+      "name": "list-calendar-events-delta",
+      "summary": "Get the incremental change set (added / modified / deleted events) for the signed-in user’s default calendar. Use the `@odata.deltaLink` from a previous response to resume.",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/events/delta()",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-delta",
+      "options": [],
+      "example": "ask-marcel list-calendar-events-delta",
+      "responseShape": "collection of changed Microsoft Graph `event` resources under `value[]` plus an `@odata.deltaLink` token"
+    },
+    {
+      "name": "list-calendar-view-delta",
+      "summary": "Get the incremental change set of expanded calendar-view occurrences over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL on the first call (not yet exposed as a CLI flag).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendarView/delta()",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-delta",
+      "options": [],
+      "example": "ask-marcel list-calendar-view-delta",
+      "responseShape": "collection of changed Microsoft Graph `event` occurrences under `value[]` plus an `@odata.deltaLink` token"
+    },
+    {
+      "name": "list-calendars",
+      "summary": "List the calendars in the signed-in user’s mailbox (default + secondary calendars + shared calendars).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendars",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-calendars",
+      "options": [],
+      "example": "ask-marcel list-calendars",
+      "responseShape": "collection of Microsoft Graph `calendar` resources under `value[]`"
+    },
+    {
+      "name": "list-channel-message-hosted-contents",
+      "summary": "List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams channel message.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-hostedcontents",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
+        }
+      ],
+      "example": "ask-marcel list-channel-message-hosted-contents --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
+      "responseShape": "collection of Microsoft Graph `chatMessageHostedContent` resources under `value[]`"
+    },
+    {
+      "name": "list-channel-message-replies",
+      "summary": "List the replies in a Microsoft Teams channel message thread.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/replies",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-replies",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "Root chatMessage ID. Returned by `ask-marcel list-channel-messages`."
+        }
+      ],
+      "example": "ask-marcel list-channel-message-replies --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
+      "responseShape": "collection of Microsoft Graph `chatMessage` replies under `value[]`"
+    },
+    {
+      "name": "list-channel-messages",
+      "summary": "List the root messages in a Microsoft Teams channel.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-list-messages",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        }
+      ],
+      "example": "ask-marcel list-channel-messages --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
+      "responseShape": "collection of Microsoft Graph `chatMessage` resources under `value[]`"
+    },
+    {
+      "name": "list-channel-tabs",
+      "summary": "List the pinned tabs (Wiki, Planner, Website, custom apps) of a Microsoft Teams channel.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/tabs",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-list-tabs",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        },
+        {
+          "name": "channel-id",
+          "key": "channelId",
+          "required": true,
+          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
+        }
+      ],
+      "example": "ask-marcel list-channel-tabs --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
+      "responseShape": "collection of Microsoft Graph `teamsTab` resources under `value[]`"
+    },
+    {
+      "name": "list-chat-members",
+      "summary": "List the members of a single Microsoft Teams chat.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/members",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list-members",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        }
+      ],
+      "example": "ask-marcel list-chat-members --chat-id '19:abc...@thread.v2'",
+      "responseShape": "collection of Microsoft Graph `conversationMember` resources under `value[]`"
+    },
+    {
+      "name": "list-chat-message-hosted-contents",
+      "summary": "List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams chat message.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/hostedContents",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-hostedcontents",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
+        }
+      ],
+      "example": "ask-marcel list-chat-message-hosted-contents --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
+      "responseShape": "collection of Microsoft Graph `chatMessageHostedContent` resources under `value[]`"
+    },
+    {
+      "name": "list-chat-message-replies",
+      "summary": "List the replies in a Microsoft Teams chat message thread.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/replies",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-replies",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        },
+        {
+          "name": "chat-message-id",
+          "key": "chatMessageId",
+          "required": true,
+          "description": "Root chatMessage ID. Returned by `ask-marcel list-chat-messages`."
+        }
+      ],
+      "example": "ask-marcel list-chat-message-replies --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
+      "responseShape": "collection of Microsoft Graph `chatMessage` replies under `value[]`"
+    },
+    {
+      "name": "list-chat-messages",
+      "summary": "List the messages in a single Microsoft Teams chat thread (1:1, group, or meeting chat).",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/messages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list-messages",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat thread ID. Returned by `ask-marcel list-chats` in the `id` field of each chat."
+        }
+      ],
+      "example": "ask-marcel list-chat-messages --chat-id '19:abc...@thread.v2'",
+      "responseShape": "collection of Microsoft Graph `chatMessage` resources under `value[]`"
+    },
+    {
+      "name": "list-chats",
+      "summary": "List the Microsoft Teams chats (1:1, group, meeting) the signed-in user is a member of.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/chats",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list",
+      "options": [],
+      "example": "ask-marcel list-chats",
+      "responseShape": "collection of Microsoft Graph `chat` resources under `value[]`"
+    },
+    {
+      "name": "list-drive-item-permissions",
+      "summary": "List the sharing permissions on a OneDrive / SharePoint file or folder.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/permissions",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-list-permissions",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the file or folder. Returned by `list-folder-files`, `search-onedrive-files`, or `get-drive-item`."
+        }
+      ],
+      "example": "ask-marcel list-drive-item-permissions --drive-id 'b!1234' --item-id '01ABC'",
+      "responseShape": "collection of Microsoft Graph `permission` resources under `value[]`"
+    },
+    {
+      "name": "list-drive-item-versions",
+      "summary": "List the historical versions of a OneDrive / SharePoint file (each save creates a new version).",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/versions",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-list-versions",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the file. Returned by `list-folder-files` or `search-onedrive-files`."
+        }
+      ],
+      "example": "ask-marcel list-drive-item-versions --drive-id 'b!1234' --item-id '01ABC'",
+      "responseShape": "collection of Microsoft Graph `driveItemVersion` resources under `value[]`"
+    },
+    {
+      "name": "list-drives",
+      "summary": "List all OneDrive / SharePoint drives the signed-in user has access to.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/drives",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/drive-list",
+      "options": [],
+      "example": "ask-marcel list-drives",
+      "responseShape": "collection of Microsoft Graph `drive` resources under `value[]`"
+    },
+    {
+      "name": "list-excel-table-rows",
+      "summary": "List the data rows of a named Excel table (excluding the header row).",
+      "category": "excel",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/workbook/tables/{table-id}/rows",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/workbooktable-list-rows",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID containing the workbook. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the .xlsx file."
+        },
+        {
+          "name": "table-id",
+          "key": "tableId",
+          "required": true,
+          "description": "Workbook table ID or table name. Returned by `ask-marcel list-excel-tables`."
+        }
+      ],
+      "example": "ask-marcel list-excel-table-rows --drive-id 'b!1234' --item-id '01XLSX' --table-id 'Table1'",
+      "responseShape": "collection of Microsoft Graph `workbookTableRow` resources (each `values` is a 2D array) under `value[]`"
+    },
+    {
+      "name": "list-excel-tables",
+      "summary": "List the named tables across every worksheet in an Excel workbook.",
+      "category": "excel",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/workbook/tables",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/workbook-list-tables",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID containing the workbook. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the .xlsx file. Returned by `list-folder-files` or `search-onedrive-files`."
+        }
+      ],
+      "example": "ask-marcel list-excel-tables --drive-id 'b!1234' --item-id '01XLSX'",
+      "responseShape": "collection of Microsoft Graph `workbookTable` resources under `value[]`"
+    },
+    {
+      "name": "list-excel-worksheets",
+      "summary": "List the worksheets (tabs) inside an Excel workbook stored in OneDrive / SharePoint.",
+      "category": "excel",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/workbook/worksheets",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/workbook-list-worksheets",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID containing the workbook. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the .xlsx file. Returned by `list-folder-files` or `search-onedrive-files`."
+        }
+      ],
+      "example": "ask-marcel list-excel-worksheets --drive-id 'b!1234' --item-id '01XLSX'",
+      "responseShape": "collection of Microsoft Graph `worksheet` resources under `value[]`"
+    },
+    {
+      "name": "list-folder-files",
+      "summary": "List the children (files and subfolders) of a folder in OneDrive / SharePoint.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/children",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-list-children",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "item-id",
+          "key": "itemId",
+          "required": true,
+          "description": "driveItem ID of the folder. Use the root folder ID from `ask-marcel get-drive-root-item` to list the top of a drive."
+        }
+      ],
+      "example": "ask-marcel list-folder-files --drive-id 'b!1234' --item-id '01ROOT'",
+      "responseShape": "collection of Microsoft Graph `driveItem` resources under `value[]`"
+    },
+    {
+      "name": "list-joined-teams",
+      "summary": "List the Microsoft Teams the signed-in user is a member of.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/joinedTeams",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-joinedteams",
+      "options": [],
+      "example": "ask-marcel list-joined-teams",
+      "responseShape": "collection of Microsoft Graph `team` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-attachments",
+      "summary": "List the attachments (file, item, reference) on a single Outlook message.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/messages/{message-id}/attachments",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/message-list-attachments",
+      "options": [
+        {
+          "name": "message-id",
+          "key": "messageId",
+          "required": true,
+          "description": "Outlook message ID. Returned by `ask-marcel list-mail-messages` or `list-mail-folder-messages`."
+        }
+      ],
+      "example": "ask-marcel list-mail-attachments --message-id 'AAMkAGI2...'",
+      "responseShape": "collection of Microsoft Graph `attachment` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-child-folders",
+      "summary": "List the subfolders of a single Outlook mail folder (e.g. subfolders of Inbox).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/mailFolders/{mail-folder-id}/childFolders",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/mailfolder-list-childfolders",
+      "options": [
+        {
+          "name": "mail-folder-id",
+          "key": "mailFolderId",
+          "required": true,
+          "description": "mailFolder ID. Returned by `ask-marcel list-mail-folders`. Well-known names also work, e.g. `inbox`, `sentitems`, `drafts`."
+        }
+      ],
+      "example": "ask-marcel list-mail-child-folders --mail-folder-id 'inbox'",
+      "responseShape": "collection of Microsoft Graph `mailFolder` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-folder-messages",
+      "summary": "List the messages inside a specific Outlook mail folder (Inbox, custom folder, etc.).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/mailFolders/{mail-folder-id}/messages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/mailfolder-list-messages",
+      "options": [
+        {
+          "name": "mail-folder-id",
+          "key": "mailFolderId",
+          "required": true,
+          "description": "mailFolder ID. Returned by `ask-marcel list-mail-folders`. Well-known names also work, e.g. `inbox`, `sentitems`, `drafts`."
+        }
+      ],
+      "example": "ask-marcel list-mail-folder-messages --mail-folder-id 'inbox'",
+      "responseShape": "collection of Microsoft Graph `message` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-folders",
+      "summary": "List the top-level mail folders in the signed-in user’s Outlook mailbox (Inbox, Sent Items, etc.).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/mailFolders",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-mailfolders",
+      "options": [],
+      "example": "ask-marcel list-mail-folders",
+      "responseShape": "collection of Microsoft Graph `mailFolder` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-messages",
+      "summary": "List the most recent messages in the signed-in user’s default Outlook inbox (no filter).",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/messages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-messages",
+      "options": [],
+      "example": "ask-marcel list-mail-messages",
+      "responseShape": "collection of Microsoft Graph `message` resources under `value[]`"
+    },
+    {
+      "name": "list-mail-rules",
+      "summary": "List the inbox / folder rules attached to a single Outlook mail folder.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/mailFolders/{mail-folder-id}/messageRules",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/mailfolder-list-messagerules",
+      "options": [
+        {
+          "name": "mail-folder-id",
+          "key": "mailFolderId",
+          "required": true,
+          "description": "mailFolder ID. Returned by `ask-marcel list-mail-folders`. Well-known names also work, e.g. `inbox`."
+        }
+      ],
+      "example": "ask-marcel list-mail-rules --mail-folder-id 'inbox'",
+      "responseShape": "collection of Microsoft Graph `messageRule` resources under `value[]`"
+    },
+    {
+      "name": "list-onenote-notebook-sections",
+      "summary": "List the sections of a single OneNote notebook.",
+      "category": "notes",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/onenote/notebooks/{notebook-id}/sections",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/notebook-list-sections",
+      "options": [
+        {
+          "name": "notebook-id",
+          "key": "notebookId",
+          "required": true,
+          "description": "OneNote notebook ID. Returned by `ask-marcel list-onenote-notebooks`."
+        }
+      ],
+      "example": "ask-marcel list-onenote-notebook-sections --notebook-id '1-12abc...'",
+      "responseShape": "collection of Microsoft Graph `onenoteSection` resources under `value[]`"
+    },
+    {
+      "name": "list-onenote-notebooks",
+      "summary": "List the OneNote notebooks owned by the signed-in user.",
+      "category": "notes",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/onenote/notebooks",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/onenote-list-notebooks",
+      "options": [],
+      "example": "ask-marcel list-onenote-notebooks",
+      "responseShape": "collection of Microsoft Graph `notebook` resources under `value[]`"
+    },
+    {
+      "name": "list-onenote-section-pages",
+      "summary": "List the pages inside a single OneNote section.",
+      "category": "notes",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/onenote/sections/{onenote-section-id}/pages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/section-list-pages",
+      "options": [
+        {
+          "name": "onenote-section-id",
+          "key": "onenoteSectionId",
+          "required": true,
+          "description": "OneNote section ID. Returned by `ask-marcel list-onenote-notebook-sections` or `list-all-onenote-sections`."
+        }
+      ],
+      "example": "ask-marcel list-onenote-section-pages --onenote-section-id '1-abc...'",
+      "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]`"
+    },
+    {
+      "name": "list-outlook-contacts",
+      "summary": "List the personal Outlook contacts in the signed-in user’s default contacts folder.",
+      "category": "contacts",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/contacts",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-contacts",
+      "options": [],
+      "example": "ask-marcel list-outlook-contacts",
+      "responseShape": "collection of Microsoft Graph `contact` resources under `value[]`"
+    },
+    {
+      "name": "list-pinned-chat-messages",
+      "summary": "List the pinned messages in a Microsoft Teams chat.",
+      "category": "chats",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/chats/{chat-id}/pinnedMessages",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list-pinnedmessages",
+      "options": [
+        {
+          "name": "chat-id",
+          "key": "chatId",
+          "required": true,
+          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+        }
+      ],
+      "example": "ask-marcel list-pinned-chat-messages --chat-id '19:abc...@thread.v2'",
+      "responseShape": "collection of Microsoft Graph `pinnedChatMessageInfo` resources under `value[]`"
+    },
+    {
+      "name": "list-plan-buckets",
+      "summary": "List the buckets (columns / lanes) of a Microsoft Planner plan.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/plans/{planner-plan-id}/buckets",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannerplan-list-buckets",
+      "options": [
+        {
+          "name": "planner-plan-id",
+          "key": "plannerPlanId",
+          "required": true,
+          "description": "Planner plan ID. Returned in the `planId` field of any task from `ask-marcel list-planner-tasks`."
+        }
+      ],
+      "example": "ask-marcel list-plan-buckets --planner-plan-id 'xqQg5FS2LkCp935s-FIFm5gAB6'",
+      "responseShape": "collection of Microsoft Graph `plannerBucket` resources under `value[]`"
+    },
+    {
+      "name": "list-plan-tasks",
+      "summary": "List every task within a Microsoft Planner plan.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/planner/plans/{planner-plan-id}/tasks",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/plannerplan-list-tasks",
+      "options": [
+        {
+          "name": "planner-plan-id",
+          "key": "plannerPlanId",
+          "required": true,
+          "description": "Planner plan ID. Returned in the `planId` field of any task from `ask-marcel list-planner-tasks`."
+        }
+      ],
+      "example": "ask-marcel list-plan-tasks --planner-plan-id 'xqQg5FS2LkCp935s-FIFm5gAB6'",
+      "responseShape": "collection of Microsoft Graph `plannerTask` resources under `value[]`"
+    },
+    {
+      "name": "list-planner-tasks",
+      "summary": "List every Microsoft Planner task assigned to or owned by the signed-in user, across all plans.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/planner/tasks",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/planneruser-list-tasks",
+      "options": [],
+      "example": "ask-marcel list-planner-tasks",
+      "responseShape": "collection of Microsoft Graph `plannerTask` resources under `value[]`"
+    },
+    {
+      "name": "list-sharepoint-site-drives",
+      "summary": "List the document libraries (drives) attached to a SharePoint site.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/drives",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/drive-list",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        }
+      ],
+      "example": "ask-marcel list-sharepoint-site-drives --site-id 'contoso.sharepoint.com,1234,5678'",
+      "responseShape": "collection of Microsoft Graph `drive` resources under `value[]`"
+    },
+    {
+      "name": "list-sharepoint-site-items",
+      "summary": "List the baseItem resources directly under a SharePoint site (typically pages and root-level items).",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/items",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/baseitem-list",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        }
+      ],
+      "example": "ask-marcel list-sharepoint-site-items --site-id 'contoso.sharepoint.com,1234,5678'",
+      "responseShape": "collection of Microsoft Graph `baseItem` resources under `value[]`"
+    },
+    {
+      "name": "list-sharepoint-site-list-items",
+      "summary": "List the rows (listItem resources) of a single SharePoint list.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/lists/{list-id}/items",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/listitem-list",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        },
+        {
+          "name": "list-id",
+          "key": "listId",
+          "required": true,
+          "description": "SharePoint list ID or display name. Returned by `ask-marcel list-sharepoint-site-lists`."
+        }
+      ],
+      "example": "ask-marcel list-sharepoint-site-list-items --site-id 'contoso.sharepoint.com,1234,5678' --list-id 'Tasks'",
+      "responseShape": "collection of Microsoft Graph `listItem` resources under `value[]`"
+    },
+    {
+      "name": "list-sharepoint-site-lists",
+      "summary": "List all SharePoint lists (custom + built-in document libraries) on a site.",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites/{site-id}/lists",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/list-list",
+      "options": [
+        {
+          "name": "site-id",
+          "key": "siteId",
+          "required": true,
+          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
+        }
+      ],
+      "example": "ask-marcel list-sharepoint-site-lists --site-id 'contoso.sharepoint.com,1234,5678'",
+      "responseShape": "collection of Microsoft Graph `list` resources under `value[]`"
+    },
+    {
+      "name": "list-specific-calendar-events",
+      "summary": "List the events in a specific (non-default) calendar (does not expand recurrences).",
+      "category": "calendar",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/events",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/calendar-list-events",
+      "options": [
+        {
+          "name": "calendar-id",
+          "key": "calendarId",
+          "required": true,
+          "description": "Calendar ID. Returned by `ask-marcel list-calendars`."
+        }
+      ],
+      "example": "ask-marcel list-specific-calendar-events --calendar-id 'AAMkAGI2THVS...'",
+      "responseShape": "collection of Microsoft Graph `event` resources under `value[]`"
+    },
+    {
+      "name": "list-team-channels",
+      "summary": "List the channels (standard, private, shared) inside a single Microsoft Team.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/channels",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-list",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        }
+      ],
+      "example": "ask-marcel list-team-channels --team-id 'abc-1234-...'",
+      "responseShape": "collection of Microsoft Graph `channel` resources under `value[]`"
+    },
+    {
+      "name": "list-team-members",
+      "summary": "List the members of a single Microsoft Team.",
+      "category": "teams",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/teams/{team-id}/members",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/team-list-members",
+      "options": [
+        {
+          "name": "team-id",
+          "key": "teamId",
+          "required": true,
+          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
+        }
+      ],
+      "example": "ask-marcel list-team-members --team-id 'abc-1234-...'",
+      "responseShape": "collection of Microsoft Graph `conversationMember` resources under `value[]`"
+    },
+    {
+      "name": "list-todo-linked-resources",
+      "summary": "List the linked resources (URLs, emails, files) attached to a Microsoft To Do task.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}/linkedResources",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/todotask-list-linkedresources",
+      "options": [
+        {
+          "name": "todo-task-list-id",
+          "key": "todoTaskListId",
+          "required": true,
+          "description": "To Do task list ID. Returned by `ask-marcel list-todo-task-lists`."
+        },
+        {
+          "name": "todo-task-id",
+          "key": "todoTaskId",
+          "required": true,
+          "description": "To Do task ID. Returned by `ask-marcel list-todo-tasks`."
+        }
+      ],
+      "example": "ask-marcel list-todo-linked-resources --todo-task-list-id 'AAMkAGI...' --todo-task-id 'AAMkABC...'",
+      "responseShape": "collection of Microsoft Graph `linkedResource` resources under `value[]`"
+    },
+    {
+      "name": "list-todo-task-lists",
+      "summary": "List the signed-in user’s Microsoft To Do task lists (e.g. `Tasks`, `Flagged Emails`, custom lists).",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/todo/lists",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/todo-list-lists",
+      "options": [],
+      "example": "ask-marcel list-todo-task-lists",
+      "responseShape": "collection of Microsoft Graph `todoTaskList` resources under `value[]`"
+    },
+    {
+      "name": "list-todo-tasks",
+      "summary": "List the tasks in a single Microsoft To Do task list.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/todo/lists/{todo-task-list-id}/tasks",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/todotasklist-list-tasks",
+      "options": [
+        {
+          "name": "todo-task-list-id",
+          "key": "todoTaskListId",
+          "required": true,
+          "description": "To Do task list ID. Returned by `ask-marcel list-todo-task-lists`."
+        }
+      ],
+      "example": "ask-marcel list-todo-tasks --todo-task-list-id 'AAMkAGI...'",
+      "responseShape": "collection of Microsoft Graph `todoTask` resources under `value[]`"
+    },
+    {
+      "name": "search-onedrive-files",
+      "summary": "Search a single OneDrive / SharePoint drive for files and folders matching a free-text query.",
+      "category": "drive",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/drives/{drive-id}/search(q='{query}')",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/driveitem-search",
+      "options": [
+        {
+          "name": "drive-id",
+          "key": "driveId",
+          "required": true,
+          "description": "Microsoft Graph drive ID to search inside. Returned by `ask-marcel list-drives`."
+        },
+        {
+          "name": "query",
+          "key": "query",
+          "required": true,
+          "description": "Free-text search query. Matches filename, content, and metadata."
+        }
+      ],
+      "example": "ask-marcel search-onedrive-files --drive-id 'b!1234' --query 'q1 budget'",
+      "responseShape": "collection of Microsoft Graph `driveItem` resources under `value[]`"
+    },
+    {
+      "name": "search-sharepoint-sites",
+      "summary": "List the SharePoint sites the signed-in user has access to (returns the followed sites by default).",
+      "category": "sharepoint",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/sites",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/site-search",
+      "options": [],
+      "example": "ask-marcel search-sharepoint-sites",
+      "responseShape": "collection of Microsoft Graph `site` resources under `value[]`"
+    }
+  ]
+}

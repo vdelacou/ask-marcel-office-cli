@@ -10,148 +10,153 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 |---------|-------------|
 | `login` | Authenticate (cached → refresh → browser fallback) |
 | `logout` | Clear cached tokens |
+| `update` | Update ask-marcel to the latest version on npm (auto-detects npm vs bun) |
+| `docs <cmd>` | Print Markdown docs for a single command (also: `docs --json` for the full manifest) |
+
+<!-- AUTO-GENERATED-COMMANDS:BEGIN -->
 
 ### OneDrive Files
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-drives` | List all drives for the authenticated user | _(none)_ |
-| `get-drive-root-item` | Get the root folder of a drive | `--drive-id` |
-| `list-folder-files` | List children of a folder/item | `--drive-id`, `--item-id` |
-| `download-onedrive-file-content` | Get download URL for a file | `--drive-id`, `--item-id` |
-| `get-drive-item` | Get metadata for a file/folder | `--drive-id`, `--item-id` |
-| `list-drive-item-permissions` | List sharing permissions | `--drive-id`, `--item-id` |
-| `list-drive-item-versions` | List file versions | `--drive-id`, `--item-id` |
-| `search-onedrive-files` | Search files by query | `--drive-id`, `--query` |
-| `get-drive-delta` | Get changes since last sync | `--drive-id`, `--item-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `download-onedrive-file-content` | Download (or follow the redirect to) the binary content of a file stored in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/content` |
+| `get-drive-delta` | Get the incremental change set (added / modified / deleted items) under a OneDrive / SharePoint folder. Use the `@odata.deltaLink` from a previous response to resume. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/delta()` |
+| `get-drive-item` | Get the metadata (driveItem resource) of a single file or folder in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}` |
+| `get-drive-root-item` | Get the root folder (driveItem) of a OneDrive / SharePoint drive. | `--drive-id` | `GET /drives/{drive-id}/root` |
+| `list-drive-item-permissions` | List the sharing permissions on a OneDrive / SharePoint file or folder. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/permissions` |
+| `list-drive-item-versions` | List the historical versions of a OneDrive / SharePoint file (each save creates a new version). | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/versions` |
+| `list-drives` | List all OneDrive / SharePoint drives the signed-in user has access to. | _(none)_ | `GET /me/drives` |
+| `list-folder-files` | List the children (files and subfolders) of a folder in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/children` |
+| `search-onedrive-files` | Search a single OneDrive / SharePoint drive for files and folders matching a free-text query. | `--drive-id`, `--query` | `GET /drives/{drive-id}/search(q='{query}')` |
 
 ### Excel (workbook files)
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-excel-worksheets` | List worksheets in a workbook | `--drive-id`, `--item-id` |
-| `list-excel-tables` | List tables in a workbook | `--drive-id`, `--item-id` |
-| `get-excel-table` | Get table details | `--drive-id`, `--item-id`, `--table-id` |
-| `list-excel-table-rows` | List rows in a table | `--drive-id`, `--item-id`, `--table-id` |
-| `get-excel-range` | Get cell values by address | `--drive-id`, `--item-id`, `--worksheet-id`, `--address` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-excel-range` | Get the cell values, formulas, and formats of a specific Excel range (e.g. `A1:C10`). | `--drive-id`, `--item-id`, `--worksheet-id`, `--address` | `GET /drives/{drive-id}/items/{item-id}/workbook/worksheets/{worksheet-id}/range(address='{address}')` |
+| `get-excel-table` | Get the metadata (style, header row, total row) of a single named Excel table. | `--drive-id`, `--item-id`, `--table-id` | `GET /drives/{drive-id}/items/{item-id}/workbook/tables/{table-id}` |
+| `list-excel-table-rows` | List the data rows of a named Excel table (excluding the header row). | `--drive-id`, `--item-id`, `--table-id` | `GET /drives/{drive-id}/items/{item-id}/workbook/tables/{table-id}/rows` |
+| `list-excel-tables` | List the named tables across every worksheet in an Excel workbook. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/workbook/tables` |
+| `list-excel-worksheets` | List the worksheets (tabs) inside an Excel workbook stored in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/workbook/worksheets` |
 
 ### SharePoint Sites
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `search-sharepoint-sites` | Search all SharePoint sites | _(none)_ |
-| `get-sharepoint-site` | Get site by ID | `--site-id` |
-| `get-sharepoint-sites-delta` | Get site changes since last sync | _(none)_ |
-| `get-sharepoint-site-by-path` | Get site by URL path | `--site-id`, `--path` |
-| `list-sharepoint-site-drives` | List drives on a site | `--site-id` |
-| `get-sharepoint-site-drive-by-id` | Get site drive by ID | `--site-id`, `--drive-id` |
-| `list-sharepoint-site-items` | List items on a site | `--site-id` |
-| `get-sharepoint-site-item` | Get site item by ID | `--site-id`, `--baseItem-id` |
-| `list-sharepoint-site-lists` | List lists on a site | `--site-id` |
-| `get-sharepoint-site-list` | Get list by ID | `--site-id`, `--list-id` |
-| `list-sharepoint-site-list-items` | List items in a list | `--site-id`, `--list-id` |
-| `get-sharepoint-site-list-item` | Get list item by ID | `--site-id`, `--list-id`, `--listItem-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-sharepoint-site` | Get the metadata of a single SharePoint site by its site ID. | `--site-id` | `GET /sites/{site-id}` |
+| `get-sharepoint-site-by-path` | Resolve a SharePoint subsite by its server-relative path under a parent site (e.g. `/teams/marketing`). | `--site-id`, `--path` | `GET /sites/{site-id}/getByPath(path='{path}')` |
+| `get-sharepoint-site-drive-by-id` | Get the metadata of a single document library (drive) on a SharePoint site by drive ID. | `--site-id`, `--drive-id` | `GET /sites/{site-id}/drives/{drive-id}` |
+| `get-sharepoint-site-item` | Get a single baseItem (page, root-level item, etc.) on a SharePoint site by ID. | `--site-id`, `--base-item-id` | `GET /sites/{site-id}/items/{base-item-id}` |
+| `get-sharepoint-site-list` | Get the metadata (display name, template, columns) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}` |
+| `get-sharepoint-site-list-item` | Get a single row (listItem) of a SharePoint list by ID. | `--site-id`, `--list-id`, `--list-item-id` | `GET /sites/{site-id}/lists/{list-id}/items/{list-item-id}` |
+| `get-sharepoint-sites-delta` | Get the incremental change set of SharePoint sites in the tenant. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /sites/delta()` |
+| `list-sharepoint-site-drives` | List the document libraries (drives) attached to a SharePoint site. | `--site-id` | `GET /sites/{site-id}/drives` |
+| `list-sharepoint-site-items` | List the baseItem resources directly under a SharePoint site (typically pages and root-level items). | `--site-id` | `GET /sites/{site-id}/items` |
+| `list-sharepoint-site-list-items` | List the rows (listItem resources) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}/items` |
+| `list-sharepoint-site-lists` | List all SharePoint lists (custom + built-in document libraries) on a site. | `--site-id` | `GET /sites/{site-id}/lists` |
+| `search-sharepoint-sites` | List the SharePoint sites the signed-in user has access to (returns the followed sites by default). | _(none)_ | `GET /sites` |
 
 ### Tasks (To Do + Planner)
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-todo-task-lists` | List To Do task lists | _(none)_ |
-| `list-todo-tasks` | List tasks in a To Do list | `--todo-task-list-id` |
-| `get-todo-task` | Get a To Do task | `--todo-task-list-id`, `--todo-task-id` |
-| `list-todo-linked-resources` | List resources linked to a To Do task | `--todo-task-list-id`, `--todo-task-id` |
-| `list-planner-tasks` | List Planner tasks for user | _(none)_ |
-| `get-planner-plan` | Get Planner plan by ID | `--planner-plan-id` |
-| `list-plan-tasks` | List tasks in a Planner plan | `--planner-plan-id` |
-| `get-planner-task` | Get Planner task by ID | `--planner-task-id` |
-| `get-planner-task-details` | Get Planner task details | `--planner-task-id` |
-| `list-plan-buckets` | List buckets in a Planner plan | `--planner-plan-id` |
-| `get-planner-bucket` | Get Planner bucket by ID | `--planner-bucket-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-planner-bucket` | Get the metadata of a single Microsoft Planner bucket (column / lane). | `--planner-bucket-id` | `GET /planner/buckets/{planner-bucket-id}` |
+| `get-planner-plan` | Get the metadata of a single Microsoft Planner plan (title, owner group, container). | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}` |
+| `get-planner-task` | Get the metadata of a single Microsoft Planner task (title, assignees, dates, completion). | `--planner-task-id` | `GET /planner/tasks/{planner-task-id}` |
+| `get-planner-task-details` | Get the rich details (description, checklist, references) of a Microsoft Planner task. | `--planner-task-id` | `GET /planner/tasks/{planner-task-id}/details` |
+| `get-todo-task` | Get a single Microsoft To Do task by its ID and its parent list ID. | `--todo-task-list-id`, `--todo-task-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}` |
+| `list-plan-buckets` | List the buckets (columns / lanes) of a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/buckets` |
+| `list-plan-tasks` | List every task within a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/tasks` |
+| `list-planner-tasks` | List every Microsoft Planner task assigned to or owned by the signed-in user, across all plans. | _(none)_ | `GET /me/planner/tasks` |
+| `list-todo-linked-resources` | List the linked resources (URLs, emails, files) attached to a Microsoft To Do task. | `--todo-task-list-id`, `--todo-task-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}/linkedResources` |
+| `list-todo-task-lists` | List the signed-in user’s Microsoft To Do task lists (e.g. `Tasks`, `Flagged Emails`, custom lists). | _(none)_ | `GET /me/todo/lists` |
+| `list-todo-tasks` | List the tasks in a single Microsoft To Do task list. | `--todo-task-list-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks` |
 
 ### Mail
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-mail-messages` | List messages in inbox | _(none)_ |
-| `list-mail-folders` | List mail folders | _(none)_ |
-| `list-mail-child-folders` | List subfolders of a mail folder | `--mail-folder-id` |
-| `list-mail-folder-messages` | List messages in a mail folder | `--mail-folder-id` |
-| `get-mail-message` | Get a message by ID | `--message-id` |
-| `list-mail-attachments` | List attachments on a message | `--message-id` |
-| `get-mail-attachment` | Get an attachment by ID | `--message-id`, `--attachment-id` |
-| `list-mail-rules` | List message rules for a folder | `--mail-folder-id` |
-| `get-mailbox-settings` | Get mailbox settings | _(none)_ |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-mail-attachment` | Get a single attachment on an Outlook message (metadata, plus the base64 `contentBytes` for file attachments). | `--message-id`, `--attachment-id` | `GET /me/messages/{message-id}/attachments/{attachment-id}` |
+| `get-mail-message` | Get a single Outlook message by ID, including subject, sender, body, and flags. | `--message-id` | `GET /me/messages/{message-id}` |
+| `get-mailbox-settings` | Get the signed-in user’s Outlook mailbox settings (timezone, working hours, automatic replies). | _(none)_ | `GET /me/mailboxSettings` |
+| `list-mail-attachments` | List the attachments (file, item, reference) on a single Outlook message. | `--message-id` | `GET /me/messages/{message-id}/attachments` |
+| `list-mail-child-folders` | List the subfolders of a single Outlook mail folder (e.g. subfolders of Inbox). | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/childFolders` |
+| `list-mail-folder-messages` | List the messages inside a specific Outlook mail folder (Inbox, custom folder, etc.). | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/messages` |
+| `list-mail-folders` | List the top-level mail folders in the signed-in user’s Outlook mailbox (Inbox, Sent Items, etc.). | _(none)_ | `GET /me/mailFolders` |
+| `list-mail-messages` | List the most recent messages in the signed-in user’s default Outlook inbox (no filter). | _(none)_ | `GET /me/messages` |
+| `list-mail-rules` | List the inbox / folder rules attached to a single Outlook mail folder. | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/messageRules` |
 
 ### Notes (OneNote)
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-onenote-notebooks` | List OneNote notebooks | _(none)_ |
-| `list-onenote-notebook-sections` | List sections in a notebook | `--notebook-id` |
-| `list-all-onenote-sections` | List all sections across notebooks | _(none)_ |
-| `list-onenote-section-pages` | List pages in a section | `--onenote-section-id` |
-| `get-onenote-page-content` | Get OneNote page content | `--onenote-page-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-onenote-page-content` | Get the HTML body of a single OneNote page. | `--onenote-page-id` | `GET /me/onenote/pages/{onenote-page-id}/content` |
+| `list-all-onenote-sections` | List every OneNote section the signed-in user can see, across all notebooks. | _(none)_ | `GET /me/onenote/sections` |
+| `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
+| `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |
+| `list-onenote-section-pages` | List the pages inside a single OneNote section. | `--onenote-section-id` | `GET /me/onenote/sections/{onenote-section-id}/pages` |
 
 ### User
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `get-current-user` | Get current user profile | _(none)_ |
-| `get-my-profile-photo` | Get current user profile photo | _(none)_ |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-current-user` | Return the signed-in user’s Microsoft Graph profile (id, displayName, mail, jobTitle, etc.). | _(none)_ | `GET /me` |
+| `get-my-profile-photo` | Download the binary content of the signed-in user’s profile photo (largest available size). | _(none)_ | `GET /me/photo/$value` |
 
 ### Calendar
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-calendars` | List all calendars | _(none)_ |
-| `list-calendar-events` | List events in default calendar | _(none)_ |
-| `get-calendar-event` | Get event by ID | `--event-id` |
-| `list-specific-calendar-events` | List events in a specific calendar | `--calendar-id` |
-| `get-specific-calendar-event` | Get event in a specific calendar | `--calendar-id`, `--event-id` |
-| `get-calendar-view` | Get calendar view (expanded recurrences) | _(none)_ |
-| `get-specific-calendar-view` | Get calendar view for a specific calendar | `--calendar-id` |
-| `list-calendar-event-instances` | List instances of a recurring event | `--calendar-id`, `--event-id` |
-| `list-calendar-events-delta` | Incremental sync of events | _(none)_ |
-| `list-calendar-view-delta` | Incremental sync within a time window | _(none)_ |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-calendar-event` | Fetch a single calendar event by ID from the signed-in user’s default calendar. | `--event-id` | `GET /me/events/{event-id}` |
+| `get-calendar-view` | List the calendar events in the signed-in user’s default calendar with recurrence expanded into individual occurrences. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag). | _(none)_ | `GET /me/calendarView` |
+| `get-specific-calendar-event` | Fetch a single calendar event by ID from a specific (non-default) calendar. | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}` |
+| `get-specific-calendar-view` | List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences. | `--calendar-id` | `GET /me/calendars/{calendar-id}/calendarView` |
+| `list-calendar-event-instances` | List the individual occurrences of a recurring calendar event over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag). | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}/instances` |
+| `list-calendar-events` | List the events in the signed-in user’s default calendar (does not expand recurrences). | _(none)_ | `GET /me/events` |
+| `list-calendar-events-delta` | Get the incremental change set (added / modified / deleted events) for the signed-in user’s default calendar. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /me/events/delta()` |
+| `list-calendar-view-delta` | Get the incremental change set of expanded calendar-view occurrences over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL on the first call (not yet exposed as a CLI flag). | _(none)_ | `GET /me/calendarView/delta()` |
+| `list-calendars` | List the calendars in the signed-in user’s mailbox (default + secondary calendars + shared calendars). | _(none)_ | `GET /me/calendars` |
+| `list-specific-calendar-events` | List the events in a specific (non-default) calendar (does not expand recurrences). | `--calendar-id` | `GET /me/calendars/{calendar-id}/events` |
 
 ### Contacts
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-outlook-contacts` | List Outlook contacts | _(none)_ |
-| `get-outlook-contact` | Get contact by ID | `--contact-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-outlook-contact` | Get a single personal Outlook contact by its ID. | `--contact-id` | `GET /me/contacts/{contact-id}` |
+| `list-outlook-contacts` | List the personal Outlook contacts in the signed-in user’s default contacts folder. | _(none)_ | `GET /me/contacts` |
 
 ### Chats
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-chats` | List Teams chats | _(none)_ |
-| `get-chat` | Get chat by ID | `--chat-id` |
-| `list-chat-members` | List chat members | `--chat-id` |
-| `list-chat-messages` | List chat messages | `--chat-id` |
-| `get-chat-message` | Get chat message by ID | `--chat-id`, `--chat-message-id` |
-| `list-chat-message-hosted-contents` | List message hosted content | `--chat-id`, `--chat-message-id` |
-| `get-chat-message-hosted-content` | Get hosted content bytes | `--chat-id`, `--chat-message-id`, `--chat-message-hosted-content-id` |
-| `list-chat-message-replies` | List message replies | `--chat-id`, `--chat-message-id` |
-| `list-pinned-chat-messages` | List pinned messages | `--chat-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-chat` | Get the metadata of a single Microsoft Teams chat (topic, type, members count, last update). | `--chat-id` | `GET /chats/{chat-id}` |
+| `get-chat-message` | Get a single message in a Microsoft Teams chat by its ID. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}` |
+| `get-chat-message-hosted-content` | Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams chat message. | `--chat-id`, `--chat-message-id`, `--chat-message-hosted-content-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value` |
+| `list-chat-members` | List the members of a single Microsoft Teams chat. | `--chat-id` | `GET /chats/{chat-id}/members` |
+| `list-chat-message-hosted-contents` | List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams chat message. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/hostedContents` |
+| `list-chat-message-replies` | List the replies in a Microsoft Teams chat message thread. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/replies` |
+| `list-chat-messages` | List the messages in a single Microsoft Teams chat thread (1:1, group, or meeting chat). | `--chat-id` | `GET /chats/{chat-id}/messages` |
+| `list-chats` | List the Microsoft Teams chats (1:1, group, meeting) the signed-in user is a member of. | _(none)_ | `GET /me/chats` |
+| `list-pinned-chat-messages` | List the pinned messages in a Microsoft Teams chat. | `--chat-id` | `GET /chats/{chat-id}/pinnedMessages` |
 
 ### Teams
 
-| Command | Description | Required params |
-|---------|-------------|-----------------|
-| `list-joined-teams` | List joined Teams | _(none)_ |
-| `get-team` | Get team by ID | `--team-id` |
-| `list-team-channels` | List team channels | `--team-id` |
-| `get-team-channel` | Get channel by ID | `--team-id`, `--channel-id` |
-| `list-channel-messages` | List channel messages | `--team-id`, `--channel-id` |
-| `get-channel-message` | Get channel message by ID | `--team-id`, `--channel-id`, `--chat-message-id` |
-| `list-channel-message-hosted-contents` | List message hosted content | `--team-id`, `--channel-id`, `--chat-message-id` |
-| `get-channel-message-hosted-content` | Get hosted content bytes | `--team-id`, `--channel-id`, `--chat-message-id`, `--chat-message-hosted-content-id` |
-| `list-channel-message-replies` | List message replies | `--team-id`, `--channel-id`, `--chat-message-id` |
-| `list-channel-tabs` | List channel tabs | `--team-id`, `--channel-id` |
-| `list-team-members` | List team members | `--team-id` |
-| `get-channel-files-folder` | Get channel files folder | `--team-id`, `--channel-id` |
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `get-channel-files-folder` | Get the SharePoint files folder (driveItem) backing a Microsoft Teams channel’s `Files` tab. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/filesFolder` |
+| `get-channel-message` | Get a single root message in a Microsoft Teams channel by ID. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}` |
+| `get-channel-message-hosted-content` | Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams channel message. | `--team-id`, `--channel-id`, `--chat-message-id`, `--chat-message-hosted-content-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value` |
+| `get-team` | Get the metadata of a single Microsoft Team (display name, settings, member-settings, owner group). | `--team-id` | `GET /teams/{team-id}` |
+| `get-team-channel` | Get the metadata of a single channel inside a Microsoft Team. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}` |
+| `list-channel-message-hosted-contents` | List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams channel message. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents` |
+| `list-channel-message-replies` | List the replies in a Microsoft Teams channel message thread. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/replies` |
+| `list-channel-messages` | List the root messages in a Microsoft Teams channel. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/messages` |
+| `list-channel-tabs` | List the pinned tabs (Wiki, Planner, Website, custom apps) of a Microsoft Teams channel. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/tabs` |
+| `list-joined-teams` | List the Microsoft Teams the signed-in user is a member of. | _(none)_ | `GET /me/joinedTeams` |
+| `list-team-channels` | List the channels (standard, private, shared) inside a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/channels` |
+| `list-team-members` | List the members of a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/members` |
 
+<!-- AUTO-GENERATED-COMMANDS:END -->
 ## Install
 
 Requires Node ≥20 **or** Bun ≥1.0 on the user's machine. Works on Windows, macOS, and Linux.
