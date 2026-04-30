@@ -268,10 +268,10 @@ Environment variables read at composition time:
 ## Quality gates (atelier four-check loop)
 
 ```bash
-bun test           # 303 tests
+bun test           # full suite
 bun run lint       # ESLint (0 warnings, 0 errors)
 bun run typecheck  # tsc --noEmit
-bun run coverage   # per-tier gates (100% domain + use-cases, 80% infra + composition + presenter)
+bun run coverage   # per-tier gates (100% on every tier: domain, use-cases, infra, composition, presenter)
 bun run mutate:changed  # mutation testing on changed domain/use-case files (>90% kill threshold)
 ```
 
