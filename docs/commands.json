@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.2.1",
-  "generatedAt": "2026-04-30T06:48:51.673Z",
+  "version": "0.3.0",
+  "generatedAt": "2026-04-30T06:57:04.396Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
