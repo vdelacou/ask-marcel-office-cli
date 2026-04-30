@@ -5,6 +5,7 @@ import { ok } from '../../domain/result.ts';
 import type { AuthManager } from '../../infra/auth.ts';
 import type { GraphError } from '../../infra/graph-client.ts';
 import { createGraphClient } from '../../infra/graph-client.ts';
+import * as downloadDriveItemVersionContent from './download-drive-item-version-content.ts';
 import * as downloadOnedriveFileContent from './download-onedrive-file-content.ts';
 import * as getCalendarEvent from './get-calendar-event.ts';
 import * as getCalendarView from './get-calendar-view.ts';
@@ -109,6 +110,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-drive-item': getDriveItem,
   'list-drive-item-permissions': listDriveItemPermissions,
   'list-drive-item-versions': listDriveItemVersions,
+  'download-drive-item-version-content': downloadDriveItemVersionContent,
   'search-onedrive-files': searchOnedriveFiles,
   'search-my-documents': searchMyDocuments,
   'get-excel-range': getExcelRange,
@@ -396,6 +398,16 @@ describe('commands', () => {
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ '@microsoft.graph.downloadUrl': 'https://...' });
   });
+
+  it('download-drive-item-version-content returns content for a historical version', async () => {
+    const result = await callCommand(
+      'download-drive-item-version-content',
+      { driveId: 'd1', itemId: 'i1', versionId: '3.0' },
+      { '@microsoft.graph.downloadUrl': 'https://cdn.example/v3' }
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ '@microsoft.graph.downloadUrl': 'https://cdn.example/v3' });
+  });
 });
 
 type CommandFixture = { readonly name: string; readonly params: Record<string, string> };
@@ -408,6 +420,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-drive-item', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'list-drive-item-permissions', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'list-drive-item-versions', params: { driveId: 'd1', itemId: 'i1' } },
+  { name: 'download-drive-item-version-content', params: { driveId: 'd1', itemId: 'i1', versionId: '3.0' } },
   { name: 'search-onedrive-files', params: { driveId: 'd1', query: 'report' } },
   { name: 'search-my-documents', params: { query: 'budget' } },
   { name: 'get-excel-range', params: { driveId: 'd1', itemId: 'i1', worksheetId: 'ws1', address: 'A1' } },
@@ -524,6 +537,7 @@ describe('command schema rejection', () => {
     { name: 'list-team-channels', params: {} },
     { name: 'get-team-channel', params: { teamId: 'tm1' } },
     { name: 'download-onedrive-file-content', params: { driveId: 'd1' } },
+    { name: 'download-drive-item-version-content', params: { driveId: 'd1', itemId: 'i1' } },
     { name: 'search-mail-messages', params: {} },
     { name: 'search-my-documents', params: {} },
     { name: 'search-calendar-events', params: {} },
@@ -554,6 +568,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'get-drive-item', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1' },
   { name: 'list-drive-item-permissions', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1/permissions' },
   { name: 'list-drive-item-versions', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1/versions' },
+  {
+    name: 'download-drive-item-version-content',
+    params: { driveId: 'd1', itemId: 'i1', versionId: '3.0' },
+    expectedPath: '/drives/d1/items/i1/versions/3.0/content',
+  },
   { name: 'search-onedrive-files', params: { driveId: 'd1', query: 'report' }, expectedPath: "/drives/d1/search(q='report')" },
   { name: 'search-my-documents', params: { query: 'budget' }, expectedPath: "/me/drive/search(q='budget')" },
   {

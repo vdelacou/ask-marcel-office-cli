@@ -1,4 +1,5 @@
 import type { Command } from './command-types.ts';
+import * as downloadDriveItemVersionContent from './download-drive-item-version-content.ts';
 import * as downloadOnedriveFileContent from './download-onedrive-file-content.ts';
 import * as getCalendarEvent from './get-calendar-event.ts';
 import * as getCalendarView from './get-calendar-view.ts';
@@ -103,6 +104,7 @@ const commands: Record<string, Command> = {
   'get-drive-item': getDriveItem,
   'list-drive-item-permissions': listDriveItemPermissions,
   'list-drive-item-versions': listDriveItemVersions,
+  'download-drive-item-version-content': downloadDriveItemVersionContent,
   'search-onedrive-files': searchOnedriveFiles,
   'search-my-documents': searchMyDocuments,
   'get-excel-range': getExcelRange,
