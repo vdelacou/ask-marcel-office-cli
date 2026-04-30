@@ -11,7 +11,17 @@ const meta: CommandMeta = {
   graphMethod: 'GET',
   graphPathTemplate: '/chats/{chat-id}/members',
   graphDocsUrl: 'https://learn.microsoft.com/en-us/graph/api/chat-list-members',
-  options: [{ name: 'chat-id', key: 'chatId', required: true, description: 'Microsoft Teams chat ID. Returned by `ask-marcel list-chats`.' }],
+  options: [
+    {
+      name: 'chat-id',
+      key: 'chatId',
+      required: true,
+      description:
+        'Microsoft Teams chat ID, e.g. `19:abc...@thread.v2`. ' +
+        'This CLI does not list chats (the Teams web client token has no `Chat.Read*` scope), so the chat ID has to come from outside: ' +
+        'the Teams desktop / web client (Open in browser → URL contains the chat thread ID), Microsoft Graph Explorer, or Power Automate.',
+    },
+  ],
   example: "ask-marcel list-chat-members --chat-id '19:abc...@thread.v2'",
   responseShape: 'collection of Microsoft Graph `conversationMember` resources under `value[]`',
 };

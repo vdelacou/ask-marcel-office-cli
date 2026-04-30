@@ -26,7 +26,6 @@ import * as getPlannerTaskDetails from './get-planner-task-details.ts';
 import * as getPlannerTask from './get-planner-task.ts';
 import * as getSharepointSiteByPath from './get-sharepoint-site-by-path.ts';
 import * as getSharepointSiteDriveById from './get-sharepoint-site-drive-by-id.ts';
-import * as getSharepointSiteItem from './get-sharepoint-site-item.ts';
 import * as getSharepointSiteListItem from './get-sharepoint-site-list-item.ts';
 import * as getSharepointSiteList from './get-sharepoint-site-list.ts';
 import * as getSharepointSite from './get-sharepoint-site.ts';
@@ -102,7 +101,6 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
-  'get-sharepoint-site-item': getSharepointSiteItem,
   'list-sharepoint-site-lists': listSharepointSiteLists,
   'get-sharepoint-site-list': getSharepointSiteList,
   'list-sharepoint-site-list-items': listSharepointSiteListItems,
@@ -381,7 +379,6 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-sharepoint-site', params: { siteId: 's1' } },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' } },
-  { name: 'get-sharepoint-site-item', params: { siteId: 's1', baseItemId: 'b1' } },
   { name: 'list-sharepoint-site-lists', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-list', params: { siteId: 's1', listId: 'l1' } },
   { name: 'list-sharepoint-site-list-items', params: { siteId: 's1', listId: 'l1' } },
@@ -424,7 +421,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-specific-calendar-event', params: { calendarId: 'c1', eventId: 'e1' } },
   { name: 'get-calendar-view', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
   { name: 'get-specific-calendar-view', params: { calendarId: 'c1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
-  { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' } },
+  { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
   { name: 'list-calendars', params: {} },
   { name: 'list-calendar-events-delta', params: {} },
   { name: 'list-calendar-view-delta', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
@@ -455,7 +452,6 @@ describe('command schema rejection', () => {
     { name: 'get-onenote-page-content', params: {} },
     { name: 'get-calendar-event', params: {} },
     { name: 'get-specific-calendar-event', params: { calendarId: 'c1' } },
-    { name: 'get-specific-calendar-view', params: { calendarId: 'c1' } },
     { name: 'list-team-channels', params: {} },
     { name: 'get-team-channel', params: { teamId: 'tm1' } },
     { name: 'download-onedrive-file-content', params: { driveId: 'd1' } },
@@ -464,6 +460,8 @@ describe('command schema rejection', () => {
     { name: 'search-my-documents', params: {} },
     { name: 'get-calendar-view', params: {} },
     { name: 'list-calendar-view-delta', params: {} },
+    { name: 'get-specific-calendar-view', params: { calendarId: 'c1' } },
+    { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' } },
     { name: 'search-onenote-pages', params: {} },
     { name: 'search-sharepoint-sites-by-name', params: {} },
     { name: 'list-incomplete-todo-tasks', params: {} },
@@ -513,7 +511,6 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'get-sharepoint-site', params: { siteId: 's1' }, expectedPath: '/sites/s1' },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' }, expectedPath: '/sites/s1/drives' },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' }, expectedPath: '/sites/s1/drives/d1' },
-  { name: 'get-sharepoint-site-item', params: { siteId: 's1', baseItemId: 'b1' }, expectedPath: '/sites/s1/items/b1' },
   { name: 'list-sharepoint-site-lists', params: { siteId: 's1' }, expectedPath: '/sites/s1/lists' },
   { name: 'get-sharepoint-site-list', params: { siteId: 's1', listId: 'l1' }, expectedPath: '/sites/s1/lists/l1' },
   { name: 'list-sharepoint-site-list-items', params: { siteId: 's1', listId: 'l1' }, expectedPath: '/sites/s1/lists/l1/items' },
@@ -564,7 +561,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
     params: { calendarId: 'c1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
     expectedPath: '/me/calendars/c1/calendarView?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
   },
-  { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' }, expectedPath: '/me/calendars/c1/events/e1/instances' },
+  {
+    name: 'list-calendar-event-instances',
+    params: { calendarId: 'c1', eventId: 'e1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
+    expectedPath: '/me/calendars/c1/events/e1/instances?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
+  },
   { name: 'list-calendars', params: {}, expectedPath: '/me/calendars' },
   { name: 'list-calendar-events-delta', params: {}, expectedPath: '/me/events/delta()' },
   {

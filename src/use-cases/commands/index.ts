@@ -20,7 +20,6 @@ import * as getPlannerTaskDetails from './get-planner-task-details.ts';
 import * as getPlannerTask from './get-planner-task.ts';
 import * as getSharepointSiteByPath from './get-sharepoint-site-by-path.ts';
 import * as getSharepointSiteDriveById from './get-sharepoint-site-drive-by-id.ts';
-import * as getSharepointSiteItem from './get-sharepoint-site-item.ts';
 import * as getSharepointSiteListItem from './get-sharepoint-site-list-item.ts';
 import * as getSharepointSiteList from './get-sharepoint-site-list.ts';
 import * as getSharepointSite from './get-sharepoint-site.ts';
@@ -96,7 +95,6 @@ const commands: Record<string, Command> = {
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
-  'get-sharepoint-site-item': getSharepointSiteItem,
   'list-sharepoint-site-lists': listSharepointSiteLists,
   'get-sharepoint-site-list': getSharepointSiteList,
   'list-sharepoint-site-list-items': listSharepointSiteListItems,

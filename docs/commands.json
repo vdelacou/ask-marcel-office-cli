@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.5.1",
-  "generatedAt": "2026-04-30T08:26:10.585Z",
+  "version": "0.5.2",
+  "generatedAt": "2026-04-30T08:44:06.812Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
@@ -463,30 +463,6 @@
       "responseShape": "single Microsoft Graph `drive` resource"
     },
     {
-      "name": "get-sharepoint-site-item",
-      "summary": "Get a single baseItem (page, root-level item, etc.) on a SharePoint site by ID.",
-      "category": "sharepoint",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/sites/{site-id}/items/{base-item-id}",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/baseitem-get",
-      "options": [
-        {
-          "name": "site-id",
-          "key": "siteId",
-          "required": true,
-          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
-        },
-        {
-          "name": "base-item-id",
-          "key": "baseItemId",
-          "required": true,
-          "description": "baseItem ID on the site. Returned by `ask-marcel list-sharepoint-site-items`."
-        }
-      ],
-      "example": "ask-marcel get-sharepoint-site-item --site-id 'contoso.sharepoint.com,1234,5678' --base-item-id '17'",
-      "responseShape": "single Microsoft Graph `baseItem` resource"
-    },
-    {
       "name": "get-sharepoint-site-list",
       "summary": "Get the metadata (display name, template, columns) of a single SharePoint list.",
       "category": "sharepoint",
@@ -673,10 +649,10 @@
     },
     {
       "name": "list-calendar-event-instances",
-      "summary": "List the individual occurrences of a recurring calendar event over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag).",
+      "summary": "List the individual occurrences of a recurring calendar event over a date range. Both ISO date-time params are required by Graph.",
       "category": "calendar",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/calendars/{calendar-id}/events/{event-id}/instances",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/events/{event-id}/instances?startDateTime={start-date-time}&endDateTime={end-date-time}",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-list-instances",
       "options": [
         {
@@ -690,9 +666,21 @@
           "key": "eventId",
           "required": true,
           "description": "Recurring event ID. Returned by `ask-marcel list-specific-calendar-events`."
+        },
+        {
+          "name": "start-date-time",
+          "key": "startDateTime",
+          "required": true,
+          "description": "ISO 8601 lower bound (UTC). Example: `2026-04-01T00:00:00Z`. Required by Graph; the request fails without it."
+        },
+        {
+          "name": "end-date-time",
+          "key": "endDateTime",
+          "required": true,
+          "description": "ISO 8601 upper bound (UTC). Example: `2026-05-01T00:00:00Z`. Required by Graph; the request fails without it."
         }
       ],
-      "example": "ask-marcel list-calendar-event-instances --calendar-id 'AAMkAGI2THVS...' --event-id 'AAMkABC...'",
+      "example": "ask-marcel list-calendar-event-instances --calendar-id 'AAMkAGI2THVS...' --event-id 'AAMkABC...' --start-date-time '2026-04-01T00:00:00Z' --end-date-time '2026-05-01T00:00:00Z'",
       "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
     },
     {
@@ -764,7 +752,7 @@
           "name": "chat-id",
           "key": "chatId",
           "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
+          "description": "Microsoft Teams chat ID, e.g. `19:abc...@thread.v2`. This CLI does not list chats (the Teams web client token has no `Chat.Read*` scope), so the chat ID has to come from outside: the Teams desktop / web client (Open in browser → URL contains the chat thread ID), Microsoft Graph Explorer, or Power Automate."
         }
       ],
       "example": "ask-marcel list-chat-members --chat-id '19:abc...@thread.v2'",
