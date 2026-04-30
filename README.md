@@ -46,7 +46,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
 | `get-sharepoint-site` | Get the metadata of a single SharePoint site by its site ID. | `--site-id` | `GET /sites/{site-id}` |
-| `get-sharepoint-site-by-path` | Resolve a SharePoint subsite by its server-relative path under a parent site (e.g. `/teams/marketing`). | `--site-id`, `--path` | `GET /sites/{site-id}/getByPath(path='{path}')` |
+| `get-sharepoint-site-by-path` | Resolve a SharePoint site by its hostname + server-relative path. Use this when you have a SharePoint URL (e.g. `https://contoso.sharepoint.com/sites/Marketing`) but no site ID. | `--hostname`, `--path` | `GET /sites/{hostname}:{path}` |
 | `get-sharepoint-site-drive-by-id` | Get the metadata of a single document library (drive) on a SharePoint site by drive ID. | `--site-id`, `--drive-id` | `GET /sites/{site-id}/drives/{drive-id}` |
 | `get-sharepoint-site-list` | Get the metadata (display name, template, columns) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}` |
 | `get-sharepoint-site-list-item` | Get a single row (listItem) of a SharePoint list by ID. | `--site-id`, `--list-id`, `--list-item-id` | `GET /sites/{site-id}/lists/{list-id}/items/{list-item-id}` |

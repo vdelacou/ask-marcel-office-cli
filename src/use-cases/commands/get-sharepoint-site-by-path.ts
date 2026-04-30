@@ -2,20 +2,37 @@ import { z } from 'zod';
 import { buildCommand } from './build-command.ts';
 import type { CommandMeta } from './command-types.ts';
 
-const schema = z.object({ siteId: z.string().min(1), path: z.string().min(1) });
-const { execute } = buildCommand((p) => `/sites/${p.siteId}/getByPath(path='${p.path}')`, schema);
+const schema = z.object({
+  hostname: z.string().min(1),
+  path: z
+    .string()
+    .min(1)
+    .refine((v) => v.startsWith('/'), { message: 'must start with `/` (server-relative path, e.g. /sites/Marketing)' }),
+});
+const { execute } = buildCommand((p) => `/sites/${p.hostname}:${p.path}`, schema);
 
 const meta: CommandMeta = {
-  summary: 'Resolve a SharePoint subsite by its server-relative path under a parent site (e.g. `/teams/marketing`).',
+  summary:
+    'Resolve a SharePoint site by its hostname + server-relative path. Use this when you have a SharePoint URL (e.g. `https://contoso.sharepoint.com/sites/Marketing`) but no site ID.',
   category: 'sharepoint',
   graphMethod: 'GET',
-  graphPathTemplate: "/sites/{site-id}/getByPath(path='{path}')",
-  graphDocsUrl: 'https://learn.microsoft.com/en-us/graph/api/site-getbypath',
+  graphPathTemplate: '/sites/{hostname}:{path}',
+  graphDocsUrl: 'https://learn.microsoft.com/en-us/graph/api/site-get',
   options: [
-    { name: 'site-id', key: 'siteId', required: true, description: 'Parent SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`, or the literal `root`.' },
-    { name: 'path', key: 'path', required: true, description: 'Server-relative path of the subsite, including the leading slash (e.g. `/teams/marketing`).' },
+    {
+      name: 'hostname',
+      key: 'hostname',
+      required: true,
+      description: 'SharePoint host, e.g. `contoso.sharepoint.com` (or `contoso-my.sharepoint.com` for personal sites). Take the host portion of your SharePoint URL.',
+    },
+    {
+      name: 'path',
+      key: 'path',
+      required: true,
+      description: 'Server-relative path starting with `/`, e.g. `/sites/Marketing` or `/teams/Marketing/Subsite`. Take the URL pathname after the hostname.',
+    },
   ],
-  example: "ask-marcel get-sharepoint-site-by-path --site-id 'root' --path '/teams/marketing'",
+  example: "ask-marcel get-sharepoint-site-by-path --hostname 'contoso.sharepoint.com' --path '/sites/Marketing'",
   responseShape: 'single Microsoft Graph `site` resource',
 };
 
