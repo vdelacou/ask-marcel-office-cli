@@ -13,14 +13,13 @@ const placeholders = (template: string): string[] => Array.from(template.matchAl
 
 type PopulatedEntry = readonly [string, Command & { meta: CommandMeta }];
 
-const populated: ReadonlyArray<PopulatedEntry> = Object.entries(commands).flatMap(([name, cmd]) => {
-  const meta = cmd.meta;
-  return meta ? [[name, { ...cmd, meta }] as PopulatedEntry] : [];
-});
+const populated: ReadonlyArray<PopulatedEntry> = Object.entries(commands).map(([name, cmd]) => [name, cmd as Command & { meta: CommandMeta }] as PopulatedEntry);
 
-describe('command meta — invariants on every populated command', () => {
-  it('finds at least one populated command (slice 1 must populate ≥1 to validate the design)', () => {
-    expect(populated.length).toBeGreaterThan(0);
+describe('command meta — invariants on every registered command', () => {
+  it('every command in the registry has a meta block', () => {
+    for (const [name, cmd] of Object.entries(commands)) {
+      expect({ name, hasMeta: cmd.meta !== undefined }).toEqual({ name, hasMeta: true });
+    }
   });
 
   for (const [name, cmd] of populated) {

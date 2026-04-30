@@ -30,7 +30,7 @@ type CommandMeta = {
 type Command = {
   readonly schema: CommandSchema;
   readonly execute: CommandExecute;
-  readonly meta?: CommandMeta;
+  readonly meta: CommandMeta;
 };
 
 export type { Command, CommandCategory, CommandExecute, CommandHttpMethod, CommandMeta, CommandOptionMeta, CommandSchema };

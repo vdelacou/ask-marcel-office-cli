@@ -58,17 +58,10 @@ const buildCli = (deps: BuildCliDeps): Command => {
     });
 
   for (const [name, cmd] of Object.entries(cmdRegistry)) {
-    const description = cmd.meta?.summary ?? `Graph API: ${name}`;
-    const commandDef = program.command(name).description(description);
-    const schemaKeys = getSchemaKeys(cmd.schema);
-    for (const key of schemaKeys) {
-      const optionMeta = cmd.meta?.options.find((o) => o.key === key);
-      commandDef.requiredOption(`--${camelToKebab(key)} <value>`, optionMeta?.description ?? key);
-    }
-    if (cmd.meta) {
-      const lines = [`\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`, `Microsoft Learn: ${cmd.meta.graphDocsUrl}`, `\nExample:\n  ${cmd.meta.example}`];
-      commandDef.addHelpText('after', lines.join('\n'));
-    }
+    const commandDef = program.command(name).description(cmd.meta.summary);
+    for (const opt of cmd.meta.options) commandDef.requiredOption(`--${opt.name} <value>`, opt.description);
+    const lines = [`\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`, `Microsoft Learn: ${cmd.meta.graphDocsUrl}`, `\nExample:\n  ${cmd.meta.example}`];
+    commandDef.addHelpText('after', lines.join('\n'));
     commandDef.action(async (opts: Record<string, string>) => {
       const result = await cmd.execute(graph, opts);
       if (result.ok) render(result.value, logger);
@@ -78,15 +71,6 @@ const buildCli = (deps: BuildCliDeps): Command => {
 
   return program;
 };
-
-const getSchemaKeys = (schema: import('zod').ZodType): string[] => {
-  const def = schema as unknown as Record<string, unknown>;
-  const shape = def.shape as Record<string, unknown> | undefined;
-  if (shape) return Object.keys(shape);
-  return [];
-};
-
-const camelToKebab = (s: string): string => s.replaceAll(/([A-Z])/g, '-$1').toLowerCase();
 
 export { buildCli };
 export type { BuildCliDeps };
