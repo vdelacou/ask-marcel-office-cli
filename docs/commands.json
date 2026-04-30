@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.5.0",
-  "generatedAt": "2026-04-30T07:54:36.455Z",
+  "version": "0.5.1",
+  "generatedAt": "2026-04-30T08:26:10.585Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
@@ -566,10 +566,10 @@
     },
     {
       "name": "get-specific-calendar-view",
-      "summary": "List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences.",
+      "summary": "List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences in a date range. Both ISO date-time params are required by Graph.",
       "category": "calendar",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/calendars/{calendar-id}/calendarView",
+      "graphPathTemplate": "/me/calendars/{calendar-id}/calendarView?startDateTime={start-date-time}&endDateTime={end-date-time}",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/calendar-list-calendarview",
       "options": [
         {
@@ -577,9 +577,21 @@
           "key": "calendarId",
           "required": true,
           "description": "Calendar ID. Returned by `ask-marcel list-calendars`."
+        },
+        {
+          "name": "start-date-time",
+          "key": "startDateTime",
+          "required": true,
+          "description": "ISO 8601 lower bound (UTC). Example: `2026-04-01T00:00:00Z`. Required by Graph; the request fails without it."
+        },
+        {
+          "name": "end-date-time",
+          "key": "endDateTime",
+          "required": true,
+          "description": "ISO 8601 upper bound (UTC). Example: `2026-05-01T00:00:00Z`. Required by Graph; the request fails without it."
         }
       ],
-      "example": "ask-marcel get-specific-calendar-view --calendar-id 'AAMkAGI2THVS...'",
+      "example": "ask-marcel get-specific-calendar-view --calendar-id 'AAMkAGI2THVS...' --start-date-time '2026-04-01T00:00:00Z' --end-date-time '2026-05-01T00:00:00Z'",
       "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
     },
     {
@@ -1376,21 +1388,21 @@
     },
     {
       "name": "search-onenote-pages",
-      "summary": "Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook.",
+      "summary": "Find OneNote pages whose **title** contains a substring (case-sensitive). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains.",
       "category": "notes",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/onenote/pages?search={query}",
+      "graphPathTemplate": "/me/onenote/pages?$filter=contains(title,'{query}')",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/onenote-list-pages",
       "options": [
         {
           "name": "query",
           "key": "query",
           "required": true,
-          "description": "Free-text query. Searches OneNote page titles and visible text content across every notebook the signed-in user owns or follows. Note: unlike mail/calendar/contacts, OneNote `$search` does not use double quotes and does not accept KQL field syntax. Use `list-onenote-section-pages` if you already know the section."
+          "description": "Substring to look for in the OneNote page title (case-sensitive). Searches title only — full-text body search is not available on OneNote pages in v1.0 Graph. Use `list-onenote-section-pages` if you already know the section."
         }
       ],
       "example": "ask-marcel search-onenote-pages --query 'meeting notes'",
-      "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]`"
+      "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]` whose title contains the query"
     },
     {
       "name": "search-sharepoint-sites",

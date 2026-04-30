@@ -3,13 +3,14 @@ import { buildCommand } from './build-command.ts';
 import type { CommandMeta } from './command-types.ts';
 
 const schema = z.object({ query: z.string().min(1) });
-const { execute } = buildCommand((p) => `/me/onenote/pages?search=${p.query}`, schema);
+const { execute } = buildCommand((p) => `/me/onenote/pages?$filter=contains(title,'${p.query}')`, schema);
 
 const meta: CommandMeta = {
-  summary: 'Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook.',
+  summary:
+    'Find OneNote pages whose **title** contains a substring (case-sensitive). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains.',
   category: 'notes',
   graphMethod: 'GET',
-  graphPathTemplate: '/me/onenote/pages?search={query}',
+  graphPathTemplate: "/me/onenote/pages?$filter=contains(title,'{query}')",
   graphDocsUrl: 'https://learn.microsoft.com/en-us/graph/api/onenote-list-pages',
   options: [
     {
@@ -17,13 +18,13 @@ const meta: CommandMeta = {
       key: 'query',
       required: true,
       description:
-        'Free-text query. Searches OneNote page titles and visible text content across every notebook the signed-in user owns or follows. ' +
-        'Note: unlike mail/calendar/contacts, OneNote `$search` does not use double quotes and does not accept KQL field syntax. ' +
+        'Substring to look for in the OneNote page title (case-sensitive). ' +
+        'Searches title only — full-text body search is not available on OneNote pages in v1.0 Graph. ' +
         'Use `list-onenote-section-pages` if you already know the section.',
     },
   ],
   example: "ask-marcel search-onenote-pages --query 'meeting notes'",
-  responseShape: 'collection of Microsoft Graph `onenotePage` resources under `value[]`',
+  responseShape: 'collection of Microsoft Graph `onenotePage` resources under `value[]` whose title contains the query',
 };
 
 export { execute, meta, schema };

@@ -99,7 +99,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
 | `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |
 | `list-onenote-section-pages` | List the pages inside a single OneNote section. | `--onenote-section-id` | `GET /me/onenote/sections/{onenote-section-id}/pages` |
-| `search-onenote-pages` | Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook. | `--query` | `GET /me/onenote/pages?search={query}` |
+| `search-onenote-pages` | Find OneNote pages whose **title** contains a substring (case-sensitive). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains. | `--query` | `GET /me/onenote/pages?$filter=contains(title,'{query}')` |
 
 ### User
 
@@ -115,7 +115,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `get-calendar-event` | Fetch a single calendar event by ID from the signed-in user’s default calendar. | `--event-id` | `GET /me/events/{event-id}` |
 | `get-calendar-view` | List the signed-in user’s default-calendar events with recurrence expanded into individual occurrences in a date range. Both ISO date-time params are required by Graph. | `--start-date-time`, `--end-date-time` | `GET /me/calendarView?startDateTime={start-date-time}&endDateTime={end-date-time}` |
 | `get-specific-calendar-event` | Fetch a single calendar event by ID from a specific (non-default) calendar. | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}` |
-| `get-specific-calendar-view` | List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences. | `--calendar-id` | `GET /me/calendars/{calendar-id}/calendarView` |
+| `get-specific-calendar-view` | List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences in a date range. Both ISO date-time params are required by Graph. | `--calendar-id`, `--start-date-time`, `--end-date-time` | `GET /me/calendars/{calendar-id}/calendarView?startDateTime={start-date-time}&endDateTime={end-date-time}` |
 | `list-calendar-event-instances` | List the individual occurrences of a recurring calendar event over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag). | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}/instances` |
 | `list-calendar-events` | List the events in the signed-in user’s default calendar (does not expand recurrences). | _(none)_ | `GET /me/events` |
 | `list-calendar-events-delta` | Get the incremental change set (added / modified / deleted events) for the signed-in user’s default calendar. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /me/events/delta()` |

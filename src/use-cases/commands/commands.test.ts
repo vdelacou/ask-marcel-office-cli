@@ -234,7 +234,7 @@ describe('commands', () => {
     if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'invoice 042' }] });
   });
 
-  it('search-onenote-pages searches OneNote pages with the OneNote `?search=` query parameter (no leading $)', async () => {
+  it('search-onenote-pages filters OneNote pages by title (Graph removed full-text ?search= from v1.0)', async () => {
     const result = await callCommand('search-onenote-pages', { query: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ title: 'Meeting notes 2026-04-30' }] });
@@ -423,7 +423,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-specific-calendar-events', params: { calendarId: 'c1' } },
   { name: 'get-specific-calendar-event', params: { calendarId: 'c1', eventId: 'e1' } },
   { name: 'get-calendar-view', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
-  { name: 'get-specific-calendar-view', params: { calendarId: 'c1' } },
+  { name: 'get-specific-calendar-view', params: { calendarId: 'c1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
   { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' } },
   { name: 'list-calendars', params: {} },
   { name: 'list-calendar-events-delta', params: {} },
@@ -455,6 +455,7 @@ describe('command schema rejection', () => {
     { name: 'get-onenote-page-content', params: {} },
     { name: 'get-calendar-event', params: {} },
     { name: 'get-specific-calendar-event', params: { calendarId: 'c1' } },
+    { name: 'get-specific-calendar-view', params: { calendarId: 'c1' } },
     { name: 'list-team-channels', params: {} },
     { name: 'get-team-channel', params: { teamId: 'tm1' } },
     { name: 'download-onedrive-file-content', params: { driveId: 'd1' } },
@@ -546,7 +547,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-all-onenote-sections', params: {}, expectedPath: '/me/onenote/sections' },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' }, expectedPath: '/me/onenote/sections/s1/pages' },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' }, expectedPath: '/me/onenote/pages/p1/content' },
-  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: '/me/onenote/pages?search=meeting' },
+  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: "/me/onenote/pages?$filter=contains(title,'meeting')" },
   { name: 'get-current-user', params: {}, expectedPath: '/me' },
   { name: 'get-my-profile-photo', params: {}, expectedPath: '/me/photo/$value' },
   { name: 'list-calendar-events', params: {}, expectedPath: '/me/events' },
@@ -558,7 +559,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
     params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
     expectedPath: '/me/calendarView?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
   },
-  { name: 'get-specific-calendar-view', params: { calendarId: 'c1' }, expectedPath: '/me/calendars/c1/calendarView' },
+  {
+    name: 'get-specific-calendar-view',
+    params: { calendarId: 'c1', startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
+    expectedPath: '/me/calendars/c1/calendarView?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
+  },
   { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' }, expectedPath: '/me/calendars/c1/events/e1/instances' },
   { name: 'list-calendars', params: {}, expectedPath: '/me/calendars' },
   { name: 'list-calendar-events-delta', params: {}, expectedPath: '/me/events/delta()' },
