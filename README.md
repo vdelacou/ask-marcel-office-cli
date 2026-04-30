@@ -161,6 +161,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-joined-teams` | List the Microsoft Teams the signed-in user is a member of. | _(none)_ | `GET /me/joinedTeams` |
 | `list-team-channels` | List the channels (standard, private, shared) inside a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/channels` |
 | `list-team-members` | List the members of a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/members` |
+| `search-graph-messages` | Search Microsoft Teams channel messages and 1:1 / group chat messages with a free-text or KQL query (Microsoft Search API). | `--query` | `POST /search/query` |
 
 <!-- AUTO-GENERATED-COMMANDS:END -->
 ## Install

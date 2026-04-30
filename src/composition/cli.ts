@@ -81,6 +81,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
       const helpLines = [
         `\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`,
         `Microsoft Learn: ${cmd.meta.graphDocsUrl}`,
+        ...(cmd.meta.bodyTemplate ? [`\nRequest body:\n  ${cmd.meta.bodyTemplate}`] : []),
         `\nExample:\n  ${cmd.meta.example}`,
       ];
       commandDef.addHelpText('after', helpLines.join('\n'));

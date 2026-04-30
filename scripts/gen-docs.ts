@@ -34,6 +34,7 @@ const buildManifest = (): CommandManifest => {
       options: m.options,
       example: m.example,
       ...(m.responseShape ? { responseShape: m.responseShape } : {}),
+      ...(m.bodyTemplate ? { bodyTemplate: m.bodyTemplate } : {}),
     });
   }
   entries.sort((a, b) => a.name.localeCompare(b.name));

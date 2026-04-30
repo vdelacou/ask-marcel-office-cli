@@ -16,6 +16,7 @@ const toEntry = (name: string, cmd: Command): CommandManifestEntry => ({
   options: cmd.meta.options,
   example: cmd.meta.example,
   ...(cmd.meta.responseShape ? { responseShape: cmd.meta.responseShape } : {}),
+  ...(cmd.meta.bodyTemplate ? { bodyTemplate: cmd.meta.bodyTemplate } : {}),
 });
 
 const buildEntries = (registry: Readonly<Record<string, Command>>): ReadonlyArray<CommandManifestEntry> =>

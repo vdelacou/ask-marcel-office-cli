@@ -40,10 +40,12 @@ const failedAuth = (): AuthManager => ({
 
 const okGraph = (value: unknown): GraphClient => ({
   get: async () => ({ ok: true, value }),
+  post: async () => ({ ok: true, value }),
 });
 
 const errGraph = (error: GraphError): GraphClient => ({
   get: async () => ({ ok: false, error }),
+  post: async () => ({ ok: false, error }),
 });
 
 describe('buildCli command surface', () => {

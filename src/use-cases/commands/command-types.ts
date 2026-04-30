@@ -25,6 +25,7 @@ type CommandMeta = {
   readonly options: ReadonlyArray<CommandOptionMeta>;
   readonly example: string;
   readonly responseShape?: string;
+  readonly bodyTemplate?: string;
 };
 
 type Command = {

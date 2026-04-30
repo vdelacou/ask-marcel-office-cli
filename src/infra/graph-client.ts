@@ -4,12 +4,15 @@ import type { AuthManager } from '../infra/auth.ts';
 
 type GraphError = { type: 'api_error'; status: number; message: string } | { type: 'auth_failed'; message: string } | { type: 'network_error'; message: string };
 
-type GraphClient = { get: (path: string) => Promise<Result<unknown, GraphError>> };
+type GraphClient = {
+  get: (path: string) => Promise<Result<unknown, GraphError>>;
+  post: (path: string, body: unknown) => Promise<Result<unknown, GraphError>>;
+};
 
 type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 
 const createGraphClient = (auth: AuthManager, fetchFn: FetchFn = globalThis.fetch): GraphClient => {
-  const get = async (path: string): Promise<Result<unknown, GraphError>> => {
+  const request = async (method: 'GET' | 'POST', path: string, body?: unknown): Promise<Result<unknown, GraphError>> => {
     const tokenResult = await auth.getAccessToken();
     if (!tokenResult.ok) {
       const msg = tokenResult.error.type === 'auth_cancelled' ? 'Auth cancelled' : tokenResult.error.message;
@@ -18,11 +21,13 @@ const createGraphClient = (auth: AuthManager, fetchFn: FetchFn = globalThis.fetc
 
     try {
       const res = await fetchFn(`https://graph.microsoft.com/v1.0${path}`, {
+        method,
         headers: { Authorization: `Bearer ${tokenResult.value}`, 'content-type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
-        return err({ type: 'api_error', status: res.status, message: body.error?.message ?? res.statusText });
+        const errBody = (await res.json().catch(() => ({}))) as { error?: { message?: string } };
+        return err({ type: 'api_error', status: res.status, message: errBody.error?.message ?? res.statusText });
       }
       return ok(await res.json());
     } catch (e: unknown) {
@@ -34,7 +39,10 @@ const createGraphClient = (auth: AuthManager, fetchFn: FetchFn = globalThis.fetc
     }
   };
 
-  return { get };
+  return {
+    get: (path) => request('GET', path),
+    post: (path, body) => request('POST', path, body),
+  };
 };
 
 export { createGraphClient };

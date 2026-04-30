@@ -105,4 +105,22 @@ describe('graph client', () => {
       expect(result.error.message).toBe('network request failed');
     }
   });
+
+  it('makes authenticated POST requests with a JSON-serialised body', async () => {
+    let captured: { url: string; method?: string; body?: string } | null = null;
+    const fetchFn: FetchFn = async (url, init) => {
+      captured = { url, method: init?.method, body: typeof init?.body === 'string' ? init.body : undefined };
+      return Response.json({ value: [{ hits: [{ rank: 1 }] }] });
+    };
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.post('/search/query', { requests: [{ entityTypes: ['chatMessage'] }] });
+    expect(result.ok).toBe(true);
+    expect(captured).not.toBeNull();
+    if (captured !== null) {
+      const c = captured as { url: string; method?: string; body?: string };
+      expect(c.url).toBe('https://graph.microsoft.com/v1.0/search/query');
+      expect(c.method).toBe('POST');
+      expect(c.body).toBe(JSON.stringify({ requests: [{ entityTypes: ['chatMessage'] }] }));
+    }
+  });
 });

@@ -90,6 +90,7 @@ import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
 import * as searchCalendarEvents from './search-calendar-events.ts';
+import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
 import * as searchMyDocuments from './search-my-documents.ts';
 import * as searchOnedriveFiles from './search-onedrive-files.ts';
@@ -191,22 +192,24 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-channel-tabs': listChannelTabs,
   'list-team-members': listTeamMembers,
   'get-channel-files-folder': getChannelFilesFolder,
+  'search-graph-messages': searchGraphMessages,
 };
 
 const fakeAuth = (): AuthManager => ({ getAccessToken: async () => ok(accessTokenUnsafe('test-token')), logout: async () => ok(undefined) });
 
-const fakeFetch = (body: unknown): ((url: string) => Promise<Response>) & { lastUrl: string | null } => {
-  let last: string | null = null;
-  const fn = async (url: string): Promise<Response> => {
-    last = url;
+type FakeFetch = ((url: string, init?: RequestInit) => Promise<Response>) & { lastUrl: string | null; lastBody: string | null };
+
+const fakeFetch = (body: unknown): FakeFetch => {
+  let lastUrl: string | null = null;
+  let lastBody: string | null = null;
+  const fn = async (url: string, init?: RequestInit): Promise<Response> => {
+    lastUrl = url;
+    lastBody = typeof init?.body === 'string' ? init.body : null;
     return new Response(JSON.stringify(body), { headers: { 'content-type': 'application/json' } });
   };
-  Object.defineProperty(fn, 'lastUrl', {
-    get() {
-      return last;
-    },
-  });
-  return fn as typeof fn & { lastUrl: string | null };
+  Object.defineProperty(fn, 'lastUrl', { get: () => lastUrl });
+  Object.defineProperty(fn, 'lastBody', { get: () => lastBody });
+  return fn as FakeFetch;
 };
 
 const callCommand = async (name: string, params: Record<string, string>, responseBody: unknown): Promise<Result<unknown, GraphError>> => {
@@ -291,6 +294,22 @@ describe('commands', () => {
     const result = await callCommand('search-sharepoint-sites-by-name', { query: 'marketing' }, { value: [{ displayName: 'Marketing site' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Marketing site' }] });
+  });
+
+  it('search-graph-messages POSTs a Microsoft Search query with chatMessage entityType and the user-supplied query string', async () => {
+    const cmd = cmdMap['search-graph-messages'];
+    if (!cmd) throw new Error('search-graph-messages not registered');
+    const fetchFn = fakeFetch({ value: [{ hitsContainers: [{ hits: [{ rank: 1 }] }] }] });
+    const graph = createGraphClient(fakeAuth(), fetchFn);
+    const result = await cmd.execute(graph, { query: 'quarterly review' });
+    expect(result.ok).toBe(true);
+    expect(fetchFn.lastUrl).toBe('https://graph.microsoft.com/v1.0/search/query');
+    expect(fetchFn.lastBody).not.toBeNull();
+    if (fetchFn.lastBody !== null) {
+      const parsed = JSON.parse(fetchFn.lastBody) as { requests: Array<{ entityTypes: string[]; query: { queryString: string } }> };
+      expect(parsed.requests[0]?.entityTypes).toEqual(['chatMessage']);
+      expect(parsed.requests[0]?.query.queryString).toBe('quarterly review');
+    }
   });
 
   it('get-excel-range returns cell values', async () => {
@@ -458,6 +477,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-channel-tabs', params: { teamId: 'tm1', channelId: 'ch1' } },
   { name: 'list-team-members', params: { teamId: 'tm1' } },
   { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' } },
+  { name: 'search-graph-messages', params: { query: 'standup' } },
 ];
 
 describe('all commands schema acceptance', () => {
@@ -492,6 +512,7 @@ describe('command schema rejection', () => {
     { name: 'search-outlook-contacts', params: {} },
     { name: 'search-onenote-pages', params: {} },
     { name: 'search-sharepoint-sites-by-name', params: {} },
+    { name: 'search-graph-messages', params: {} },
   ];
 
   it.each(rejectCases)('$name rejects missing required params', async ({ name, params }) => {
@@ -615,6 +636,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-channel-tabs', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/tabs' },
   { name: 'list-team-members', params: { teamId: 'tm1' }, expectedPath: '/teams/tm1/members' },
   { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/filesFolder' },
+  { name: 'search-graph-messages', params: { query: 'standup' }, expectedPath: '/search/query' },
 ];
 
 describe('all commands build correct Graph URL', () => {

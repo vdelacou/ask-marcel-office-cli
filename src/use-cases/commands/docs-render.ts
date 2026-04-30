@@ -10,6 +10,7 @@ export type CommandManifestEntry = {
   readonly options: CommandMeta['options'];
   readonly example: string;
   readonly responseShape?: string;
+  readonly bodyTemplate?: string;
 };
 
 export type CommandManifest = {
@@ -74,6 +75,7 @@ export const renderCommandMarkdown = (entry: CommandManifestEntry): string => {
     lines.push('| Flag | Description |', '|------|-------------|');
     for (const o of entry.options) lines.push(`| \`--${o.name}\` | ${o.description} |`);
   }
+  if (entry.bodyTemplate) lines.push('', '## Request body', '', '```json', entry.bodyTemplate, '```');
   lines.push('', '## Example', '', '```bash', entry.example, '```');
   return lines.join('\n');
 };

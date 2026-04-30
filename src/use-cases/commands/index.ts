@@ -84,6 +84,7 @@ import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
 import * as searchCalendarEvents from './search-calendar-events.ts';
+import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
 import * as searchMyDocuments from './search-my-documents.ts';
 import * as searchOnedriveFiles from './search-onedrive-files.ts';
@@ -185,6 +186,7 @@ const commands: Record<string, Command> = {
   'list-channel-tabs': listChannelTabs,
   'list-team-members': listTeamMembers,
   'get-channel-files-folder': getChannelFilesFolder,
+  'search-graph-messages': searchGraphMessages,
 };
 
 export { commands };
