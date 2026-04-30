@@ -1,7 +1,7 @@
 {
   "name": "ask-marcel-office-cli",
   "version": "0.5.4",
-  "description": "Microsoft Graph CLI + library — typed Bun/TypeScript wrapper around 100+ Graph API operations with browser-fallback OAuth.",
+  "description": "Microsoft Graph CLI + library — typed Bun/TypeScript wrapper around 70+ read-side Graph operations reachable from a Teams browser-OAuth token.",
   "license": "MIT",
   "author": "Vincent Delacourt <vincent.delacourt@adama-development.com>",
   "repository": {
