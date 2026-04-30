@@ -6,7 +6,7 @@ const schema = z.object({}).strict();
 const { execute } = buildCommand(() => '/me/onenote/notebooks', schema);
 
 const meta: CommandMeta = {
-  summary: 'List the OneNote notebooks owned by the signed-in user.',
+  summary: 'List the OneNote notebooks the signed-in user owns or has access to (sorted by `createdDateTime` desc by Graph; soft-deleted notebooks excluded).',
   category: 'notes',
   graphMethod: 'GET',
   graphPathTemplate: '/me/onenote/notebooks',

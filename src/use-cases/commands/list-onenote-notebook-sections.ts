@@ -6,7 +6,8 @@ const schema = z.object({ notebookId: z.string().min(1) });
 const { execute } = buildCommand((p) => `/me/onenote/notebooks/${p.notebookId}/sections`, schema);
 
 const meta: CommandMeta = {
-  summary: 'List the sections of a single OneNote notebook.',
+  summary:
+    'List the top-level sections of a single OneNote notebook (flat — does NOT recurse into section groups; use `list-all-onenote-sections` to flatten every notebook the user has access to).',
   category: 'notes',
   graphMethod: 'GET',
   graphPathTemplate: '/me/onenote/notebooks/{notebook-id}/sections',

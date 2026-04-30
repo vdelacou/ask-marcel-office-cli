@@ -38,27 +38,48 @@ const buildCli = (deps: BuildCliDeps): Command => {
 
   program.commandsGroup('Lifecycle:');
 
-  program
+  const loginCmd = program
     .command('login')
-    .description('Authenticate (cached → refresh → browser)')
+    .description('Authenticate against Microsoft Graph using the Teams web client (cached token → refresh → browser fallback).')
     .action(async () => {
       const result = await login.execute(auth);
       if (result.ok) render({ status: 'authenticated' }, logger);
       else fail(result.error.type === 'auth_cancelled' ? 'Authentication cancelled' : result.error.message);
     });
+  loginCmd.addHelpText(
+    'after',
+    [
+      '',
+      'Token cache:   ~/.ask-marcel/token-cache.json (access + refresh tokens, JSON, 0600).',
+      'Browser data:  ~/.ask-marcel/browser-profile/ (Playwright persistent context).',
+      'Scopes:        granted by Microsoft to the Teams web client (CLIENT_ID 5e3ce6c0-...);',
+      '               this CLI cannot request additional scopes. To inspect the granted set:',
+      '               bun run scripts/print-token-scopes.ts',
+      'Stuck flow:    `ask-marcel logout` then re-run; the browser fallback opens a fresh Edge / Chrome window.',
+    ].join('\n  ')
+  );
 
-  program
+  const logoutCmd = program
     .command('logout')
-    .description('Clear cached tokens')
+    .description('Clear the cached Microsoft Graph token so the next command forces a fresh sign-in.')
     .action(async () => {
       const result = await logout.execute(auth);
       if (result.ok) render({ status: 'logged_out' }, logger);
       else fail(result.error.type === 'auth_cancelled' ? 'Logout cancelled' : result.error.message);
     });
+  logoutCmd.addHelpText(
+    'after',
+    [
+      '',
+      'Removes:       ~/.ask-marcel/token-cache.json (access + refresh tokens).',
+      'Leaves alone:  ~/.ask-marcel/browser-profile/ (delete it manually if you want a clean Playwright session too).',
+      'Verify clean:  ls ~/.ask-marcel/  (token-cache.json should be gone).',
+    ].join('\n  ')
+  );
 
-  program
+  const updateCmd = program
     .command('update')
-    .description('Update ask-marcel to the latest version on npm (auto-detects npm vs bun)')
+    .description('Re-install the latest published ask-marcel from npm, in place. Auto-detects whether you originally installed via npm or bun.')
     .action(async () => {
       const manager = deps.packageManager ?? detectPackageManager(process.argv[1] ?? '');
       const result = await update.execute(processRunner, manager);
@@ -66,11 +87,22 @@ const buildCli = (deps: BuildCliDeps): Command => {
       else if (result.error.type === 'spawn_failed') fail(`update failed: ${result.error.message}`);
       else fail(`update install exited with code ${result.error.exitCode}`);
     });
+  updateCmd.addHelpText(
+    'after',
+    [
+      '',
+      'Detection:    based on the bin path of the running CLI.',
+      '              `/usr/local/lib/node_modules/...` -> npm, `~/.bun/install/...` -> bun.',
+      'Side effect:  shells out to `npm i -g ask-marcel-office-cli@latest` or `bun add -g ...`.',
+      'Token cache:  preserved (this only re-installs the JS bundle).',
+      'Local clone:  do NOT use `update` — pull and re-run `bun install` instead.',
+    ].join('\n  ')
+  );
 
   program
     .command('docs')
-    .description('Print Markdown docs for a single command')
-    .argument('<command>', 'Command name to show docs for (run `ask-marcel --help` to list every command)')
+    .description('Print Markdown docs for a single command (the same per-command page that ships in `docs/commands.json`).')
+    .argument('<command>', 'Command name to show docs for (run `ask-marcel --help` to list every command).')
     .action((commandName: string) => {
       const result = renderSingleCommand(cmdRegistry, commandName);
       if (result.ok) process.stdout.write(`${result.value}\n`);

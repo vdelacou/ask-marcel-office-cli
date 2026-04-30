@@ -17,7 +17,7 @@ const execute = async (graph: GraphClient, params: Record<string, string>): Prom
 
 const meta: CommandMeta = {
   summary:
-    'Download the binary content of a specific historical version of a OneDrive / SharePoint file. Same envelope as download-onedrive-file-content (302 → downloadUrl, or base64 bytes).',
+    'Download the binary content of a specific *non-current* historical version of a OneDrive / SharePoint file. Graph refuses to serve the current version through this endpoint with "You cannot get the content of the current version" — for the current version use `download-onedrive-file-content` instead. Same envelope as that command (302 → downloadUrl, or base64 bytes).',
   category: 'drive',
   graphMethod: 'GET',
   graphPathTemplate: '/drives/{drive-id}/items/{item-id}/versions/{version-id}/content',
@@ -36,7 +36,9 @@ const meta: CommandMeta = {
       name: 'version-id',
       key: 'versionId',
       required: true,
-      description: 'driveItemVersion ID. Returned by `ask-marcel list-drive-item-versions`. Use the `id` field of an entry under `value[]`.',
+      description:
+        'driveItemVersion ID. Returned by `ask-marcel list-drive-item-versions`. Use the `id` field of an entry under `value[]`. ' +
+        'Pick a non-current version — the first entry (e.g. `12.0`) is the live file and Graph rejects this endpoint for it; use `value[1]` or older.',
     },
   ],
   example: "ask-marcel download-drive-item-version-content --drive-id 'b!1234' --item-id '01ABC' --version-id '4.0'",

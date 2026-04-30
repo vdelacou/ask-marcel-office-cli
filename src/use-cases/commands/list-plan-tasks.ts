@@ -6,7 +6,8 @@ const schema = z.object({ plannerPlanId: z.string().min(1) });
 const { execute } = buildCommand((p) => `/planner/plans/${p.plannerPlanId}/tasks`, schema);
 
 const meta: CommandMeta = {
-  summary: 'List every task within a Microsoft Planner plan.',
+  summary:
+    'List every task within a Microsoft Planner plan, regardless of completion status (Graph orders by `orderHint`). Use `list-incomplete-planner-tasks` for the across-plans incomplete view.',
   category: 'tasks',
   graphMethod: 'GET',
   graphPathTemplate: '/planner/plans/{planner-plan-id}/tasks',

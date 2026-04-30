@@ -19,7 +19,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
-| `download-drive-item-version-content` | Download the binary content of a specific historical version of a OneDrive / SharePoint file. Same envelope as download-onedrive-file-content (302 → downloadUrl, or base64 bytes). | `--drive-id`, `--item-id`, `--version-id` | `GET /drives/{drive-id}/items/{item-id}/versions/{version-id}/content` |
+| `download-drive-item-version-content` | Download the binary content of a specific *non-current* historical version of a OneDrive / SharePoint file. Graph refuses to serve the current version through this endpoint with "You cannot get the content of the current version" — for the current version use `download-onedrive-file-content` instead. Same envelope as that command (302 → downloadUrl, or base64 bytes). | `--drive-id`, `--item-id`, `--version-id` | `GET /drives/{drive-id}/items/{item-id}/versions/{version-id}/content` |
 | `download-onedrive-file-content` | Download the binary content of a file stored in OneDrive / SharePoint. Graph normally returns a 302 redirect to a pre-signed CDN URL, surfaced as `@microsoft.graph.downloadUrl`; if it returns bytes directly they are base64-encoded for safe JSON output. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/content` |
 | `get-drive-delta` | Get the incremental change set (added / modified / deleted items) under a OneDrive / SharePoint folder. Use the `@odata.deltaLink` from a previous response to resume. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/delta()` |
 | `get-drive-item` | Get the metadata (driveItem resource) of a single file or folder in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}` |
@@ -68,12 +68,12 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-incomplete-planner-tasks` | List every incomplete Microsoft Planner task assigned to or owned by the signed-in user, across every plan. | _(none)_ | `GET /me/planner/tasks?$filter=percentComplete ne 100` |
 | `list-incomplete-todo-tasks` | List every incomplete Microsoft To Do task in a given list (status not equal to `completed`). | `--todo-task-list-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks?$filter=status ne 'completed'` |
 | `list-plan-buckets` | List the buckets (columns / lanes) of a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/buckets` |
-| `list-plan-tasks` | List every task within a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/tasks` |
+| `list-plan-tasks` | List every task within a Microsoft Planner plan, regardless of completion status (Graph orders by `orderHint`). Use `list-incomplete-planner-tasks` for the across-plans incomplete view. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/tasks` |
 | `list-planner-plans` | List every Microsoft Planner plan the signed-in user has access to (across every group). Use this to discover plan IDs without needing an existing task as the entry point. | _(none)_ | `GET /me/planner/plans` |
 | `list-planner-tasks` | List every Microsoft Planner task assigned to or owned by the signed-in user, across all plans. | _(none)_ | `GET /me/planner/tasks` |
 | `list-todo-linked-resources` | List the linked resources (URLs, emails, files) attached to a Microsoft To Do task. | `--todo-task-list-id`, `--todo-task-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}/linkedResources` |
 | `list-todo-task-lists` | List the signed-in user’s Microsoft To Do task lists (e.g. `Tasks`, `Flagged Emails`, custom lists). | _(none)_ | `GET /me/todo/lists` |
-| `list-todo-tasks` | List the tasks in a single Microsoft To Do task list. | `--todo-task-list-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks` |
+| `list-todo-tasks` | List every task in a single Microsoft To Do task list, regardless of completion status. Use `list-incomplete-todo-tasks` if you only want the open ones. | `--todo-task-list-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks` |
 
 ### Mail
 
@@ -86,7 +86,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-mail-child-folders` | List the subfolders of a single Outlook mail folder (e.g. subfolders of Inbox). | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/childFolders` |
 | `list-mail-folder-messages` | List the messages inside a specific Outlook mail folder (Inbox, custom folder, etc.). | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/messages` |
 | `list-mail-folders` | List the top-level mail folders in the signed-in user’s Outlook mailbox (Inbox, Sent Items, etc.). | _(none)_ | `GET /me/mailFolders` |
-| `list-mail-messages` | List the most recent messages in the signed-in user’s default Outlook inbox (no filter). | _(none)_ | `GET /me/messages` |
+| `list-mail-messages` | List the most recent messages from across the signed-in user’s entire Outlook mailbox (every folder including Sent, Archive, Junk; default sort `receivedDateTime` desc). Use `list-mail-folder-messages` to scope to a single folder such as Inbox. | _(none)_ | `GET /me/messages` |
 | `list-mail-rules` | List the inbox / folder rules attached to a single Outlook mail folder. | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/messageRules` |
 | `search-mail-messages` | Search the signed-in user’s entire Outlook mailbox using KQL or free text. Results are ranked by Graph relevance. | `--query` | `GET /me/messages?$search="{query}"` |
 
@@ -96,10 +96,10 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 |---------|-------------|-----------------|----------------|
 | `get-onenote-page-content` | Get the HTML body of a single OneNote page. Returned in a JSON envelope so the HTML survives transport. | `--onenote-page-id` | `GET /me/onenote/pages/{onenote-page-id}/content` |
 | `list-all-onenote-sections` | List every OneNote section the signed-in user can see, across all notebooks. | _(none)_ | `GET /me/onenote/sections` |
-| `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
-| `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |
+| `list-onenote-notebook-sections` | List the top-level sections of a single OneNote notebook (flat — does NOT recurse into section groups; use `list-all-onenote-sections` to flatten every notebook the user has access to). | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
+| `list-onenote-notebooks` | List the OneNote notebooks the signed-in user owns or has access to (sorted by `createdDateTime` desc by Graph; soft-deleted notebooks excluded). | _(none)_ | `GET /me/onenote/notebooks` |
 | `list-onenote-section-pages` | List the pages inside a single OneNote section. | `--onenote-section-id` | `GET /me/onenote/sections/{onenote-section-id}/pages` |
-| `search-onenote-pages` | Find OneNote pages whose **title** contains a substring (case-sensitive). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains. | `--query` | `GET /me/onenote/pages?$filter=contains(title,'{query}')` |
+| `search-onenote-pages` | Find OneNote pages whose title contains a substring (case-sensitive — page content is NOT searched). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains, which is what this command runs. | `--title-substring` | `GET /me/onenote/pages?$filter=contains(title,'{title-substring}')` |
 
 ### User
 

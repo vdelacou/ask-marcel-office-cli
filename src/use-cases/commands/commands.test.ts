@@ -235,7 +235,7 @@ describe('commands', () => {
   });
 
   it('search-onenote-pages filters OneNote pages by title (Graph removed full-text ?search= from v1.0)', async () => {
-    const result = await callCommand('search-onenote-pages', { query: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
+    const result = await callCommand('search-onenote-pages', { titleSubstring: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ title: 'Meeting notes 2026-04-30' }] });
   });
@@ -415,7 +415,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-all-onenote-sections', params: {} },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' } },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' } },
-  { name: 'search-onenote-pages', params: { query: 'meeting' } },
+  { name: 'search-onenote-pages', params: { titleSubstring: 'meeting' } },
   { name: 'get-current-user', params: {} },
   { name: 'get-my-profile-photo', params: {} },
   { name: 'list-calendar-events', params: {} },
@@ -554,7 +554,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-all-onenote-sections', params: {}, expectedPath: '/me/onenote/sections' },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' }, expectedPath: '/me/onenote/sections/s1/pages' },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' }, expectedPath: '/me/onenote/pages/p1/content' },
-  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: "/me/onenote/pages?$filter=contains(title,'meeting')" },
+  { name: 'search-onenote-pages', params: { titleSubstring: 'meeting' }, expectedPath: "/me/onenote/pages?$filter=contains(title,'meeting')" },
   { name: 'get-current-user', params: {}, expectedPath: '/me' },
   { name: 'get-my-profile-photo', params: {}, expectedPath: '/me/photo/$value' },
   { name: 'list-calendar-events', params: {}, expectedPath: '/me/events' },

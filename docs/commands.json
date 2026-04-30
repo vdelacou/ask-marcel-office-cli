@@ -1,11 +1,11 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.5.4",
-  "generatedAt": "2026-04-30T09:30:44.019Z",
+  "version": "0.5.5",
+  "generatedAt": "2026-04-30T10:04:51.185Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
-      "summary": "Download the binary content of a specific historical version of a OneDrive / SharePoint file. Same envelope as download-onedrive-file-content (302 → downloadUrl, or base64 bytes).",
+      "summary": "Download the binary content of a specific *non-current* historical version of a OneDrive / SharePoint file. Graph refuses to serve the current version through this endpoint with \"You cannot get the content of the current version\" — for the current version use `download-onedrive-file-content` instead. Same envelope as that command (302 → downloadUrl, or base64 bytes).",
       "category": "drive",
       "graphMethod": "GET",
       "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/versions/{version-id}/content",
@@ -27,7 +27,7 @@
           "name": "version-id",
           "key": "versionId",
           "required": true,
-          "description": "driveItemVersion ID. Returned by `ask-marcel list-drive-item-versions`. Use the `id` field of an entry under `value[]`."
+          "description": "driveItemVersion ID. Returned by `ask-marcel list-drive-item-versions`. Use the `id` field of an entry under `value[]`. Pick a non-current version — the first entry (e.g. `12.0`) is the live file and Graph rejects this endpoint for it; use `value[1]` or older."
         }
       ],
       "example": "ask-marcel download-drive-item-version-content --drive-id 'b!1234' --item-id '01ABC' --version-id '4.0'",
@@ -752,7 +752,7 @@
           "name": "chat-id",
           "key": "chatId",
           "required": true,
-          "description": "Microsoft Teams chat ID, e.g. `19:abc...@thread.v2`. This CLI does not list chats (the Teams web client token has no `Chat.Read*` scope), so the chat ID has to come from outside: the Teams desktop / web client (Open in browser → URL contains the chat thread ID), Microsoft Graph Explorer, or Power Automate."
+          "description": "Microsoft Teams chat ID, e.g. `19:abc...@thread.v2`. This CLI does not list chats (the Teams web client token has no `Chat.Read*` scope), so the chat ID has to come from outside. Easiest source from inside this CLI: pick any Teams meeting from `list-calendar-events` and URL-decode the `19%3ameeting_...%40thread.v2` segment of its `onlineMeeting.joinUrl`. Other sources: the Teams desktop / web client (Open in browser → URL contains the chat thread ID), Microsoft Graph Explorer, or Power Automate."
         }
       ],
       "example": "ask-marcel list-chat-members --chat-id '19:abc...@thread.v2'",
@@ -1026,7 +1026,7 @@
     },
     {
       "name": "list-mail-messages",
-      "summary": "List the most recent messages in the signed-in user’s default Outlook inbox (no filter).",
+      "summary": "List the most recent messages from across the signed-in user’s entire Outlook mailbox (every folder including Sent, Archive, Junk; default sort `receivedDateTime` desc). Use `list-mail-folder-messages` to scope to a single folder such as Inbox.",
       "category": "mail",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/messages",
@@ -1055,7 +1055,7 @@
     },
     {
       "name": "list-onenote-notebook-sections",
-      "summary": "List the sections of a single OneNote notebook.",
+      "summary": "List the top-level sections of a single OneNote notebook (flat — does NOT recurse into section groups; use `list-all-onenote-sections` to flatten every notebook the user has access to).",
       "category": "notes",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/onenote/notebooks/{notebook-id}/sections",
@@ -1073,7 +1073,7 @@
     },
     {
       "name": "list-onenote-notebooks",
-      "summary": "List the OneNote notebooks owned by the signed-in user.",
+      "summary": "List the OneNote notebooks the signed-in user owns or has access to (sorted by `createdDateTime` desc by Graph; soft-deleted notebooks excluded).",
       "category": "notes",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/onenote/notebooks",
@@ -1120,7 +1120,7 @@
     },
     {
       "name": "list-plan-tasks",
-      "summary": "List every task within a Microsoft Planner plan.",
+      "summary": "List every task within a Microsoft Planner plan, regardless of completion status (Graph orders by `orderHint`). Use `list-incomplete-planner-tasks` for the across-plans incomplete view.",
       "category": "tasks",
       "graphMethod": "GET",
       "graphPathTemplate": "/planner/plans/{planner-plan-id}/tasks",
@@ -1291,7 +1291,7 @@
     },
     {
       "name": "list-todo-tasks",
-      "summary": "List the tasks in a single Microsoft To Do task list.",
+      "summary": "List every task in a single Microsoft To Do task list, regardless of completion status. Use `list-incomplete-todo-tasks` if you only want the open ones.",
       "category": "tasks",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/todo/lists/{todo-task-list-id}/tasks",
@@ -1387,21 +1387,21 @@
     },
     {
       "name": "search-onenote-pages",
-      "summary": "Find OneNote pages whose **title** contains a substring (case-sensitive). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains.",
+      "summary": "Find OneNote pages whose title contains a substring (case-sensitive — page content is NOT searched). Microsoft removed full-text OneNote `?search=` from v1.0 Graph; only $filter against `title` remains, which is what this command runs.",
       "category": "notes",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/onenote/pages?$filter=contains(title,'{query}')",
+      "graphPathTemplate": "/me/onenote/pages?$filter=contains(title,'{title-substring}')",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/onenote-list-pages",
       "options": [
         {
-          "name": "query",
-          "key": "query",
+          "name": "title-substring",
+          "key": "titleSubstring",
           "required": true,
-          "description": "Substring to look for in the OneNote page title (case-sensitive). Searches title only — full-text body search is not available on OneNote pages in v1.0 Graph. Use `list-onenote-section-pages` if you already know the section."
+          "description": "Substring to look for inside OneNote page titles (case-sensitive, exact substring). This is title-only — full-text body search is not available on OneNote pages in v1.0 Graph. Use `list-onenote-section-pages` if you already know the section."
         }
       ],
-      "example": "ask-marcel search-onenote-pages --query 'meeting notes'",
-      "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]` whose title contains the query"
+      "example": "ask-marcel search-onenote-pages --title-substring 'meeting notes'",
+      "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]` whose title contains the substring"
     },
     {
       "name": "search-sharepoint-sites",
