@@ -92,6 +92,7 @@ import * as listTeamMembers from './list-team-members.ts';
 import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
+import * as nextPage from './next-page.ts';
 import * as searchCalendarEvents from './search-calendar-events.ts';
 import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
@@ -199,6 +200,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-team-members': listTeamMembers,
   'get-channel-files-folder': getChannelFilesFolder,
   'search-graph-messages': searchGraphMessages,
+  'next-page': nextPage,
 };
 
 const fakeAuth = (): AuthManager => ({ getAccessToken: async () => ok(accessTokenUnsafe('test-token')), logout: async () => ok(undefined) });
@@ -312,6 +314,25 @@ describe('commands', () => {
     const result = await callCommand('list-incomplete-todo-tasks', { todoTaskListId: 'tl1' }, { value: [{ id: 'tt1', status: 'inProgress' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ id: 'tt1', status: 'inProgress' }] });
+  });
+
+  it('next-page strips the Graph v1.0 prefix and GETs the rest of the supplied URL', async () => {
+    const result = await callCommand('next-page', { url: 'https://graph.microsoft.com/v1.0/me/messages?$skip=10' }, { value: [{ subject: 'page 2' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'page 2' }] });
+  });
+
+  it('next-page rejects URLs that do not start with the Graph v1.0 prefix', async () => {
+    const cmd = cmdMap['next-page'];
+    if (!cmd) throw new Error('next-page not registered');
+    const fetchFn = fakeFetch({ ok: true });
+    const graph = createGraphClient(fakeAuth(), fetchFn);
+    try {
+      await cmd.execute(graph, { url: 'https://example.com/something' });
+      throw new Error('should have rejected');
+    } catch (e) {
+      expect((e as Error).message).toContain('validation failed:');
+    }
   });
 
   it('search-graph-messages POSTs a Microsoft Search query with chatMessage entityType and the user-supplied query string', async () => {
@@ -509,6 +530,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-team-members', params: { teamId: 'tm1' } },
   { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' } },
   { name: 'search-graph-messages', params: { query: 'standup' } },
+  { name: 'next-page', params: { url: 'https://graph.microsoft.com/v1.0/me/messages?$skip=10' } },
 ];
 
 describe('all commands schema acceptance', () => {
@@ -546,6 +568,8 @@ describe('command schema rejection', () => {
     { name: 'search-sharepoint-sites-by-name', params: {} },
     { name: 'search-graph-messages', params: {} },
     { name: 'list-incomplete-todo-tasks', params: {} },
+    { name: 'next-page', params: {} },
+    { name: 'next-page', params: { url: 'https://example.com/foo' } },
   ];
 
   it.each(rejectCases)('$name rejects missing required params', async ({ name, params }) => {
@@ -677,6 +701,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-team-members', params: { teamId: 'tm1' }, expectedPath: '/teams/tm1/members' },
   { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/filesFolder' },
   { name: 'search-graph-messages', params: { query: 'standup' }, expectedPath: '/search/query' },
+  {
+    name: 'next-page',
+    params: { url: 'https://graph.microsoft.com/v1.0/me/messages?$skip=10' },
+    expectedPath: '/me/messages?$skip=10',
+  },
 ];
 
 describe('all commands build correct Graph URL', () => {

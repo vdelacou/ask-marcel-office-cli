@@ -48,8 +48,8 @@ describe('command meta — invariants on every registered command', () => {
         expect(found).toEqual(expected);
       });
 
-      it('publishes a Microsoft Learn URL for the underlying Graph endpoint', () => {
-        expect(cmd.meta.graphDocsUrl).toMatch(/^https:\/\/learn\.microsoft\.com\/en-us\/graph\/api\//);
+      it('publishes a Microsoft Learn URL for the underlying Graph endpoint or guide', () => {
+        expect(cmd.meta.graphDocsUrl).toMatch(/^https:\/\/learn\.microsoft\.com\/en-us\/graph\//);
       });
 
       it('provides a runnable example beginning with `ask-marcel`', () => {

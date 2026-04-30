@@ -166,6 +166,12 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-team-members` | List the members of a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/members` |
 | `search-graph-messages` | Search Microsoft Teams channel messages and 1:1 / group chat messages with a free-text or KQL query (Microsoft Search API). | `--query` | `POST /search/query` |
 
+### Meta / Pagination
+
+| Command | Description | Required params | Graph endpoint |
+|---------|-------------|-----------------|----------------|
+| `next-page` | Fetch the next page of a paginated Graph response. Pass the `@odata.nextLink` value returned by any list / search / delta command to walk pagination yourself. | `--url` | `GET {url}` |
+
 <!-- AUTO-GENERATED-COMMANDS:END -->
 ## Install
 

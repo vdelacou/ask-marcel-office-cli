@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.3.0",
-  "generatedAt": "2026-04-30T06:57:04.396Z",
+  "version": "0.3.1",
+  "generatedAt": "2026-04-30T07:16:03.044Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
@@ -1710,6 +1710,24 @@
       ],
       "example": "ask-marcel list-todo-tasks --todo-task-list-id 'AAMkAGI...'",
       "responseShape": "collection of Microsoft Graph `todoTask` resources under `value[]`"
+    },
+    {
+      "name": "next-page",
+      "summary": "Fetch the next page of a paginated Graph response. Pass the `@odata.nextLink` value returned by any list / search / delta command to walk pagination yourself.",
+      "category": "meta",
+      "graphMethod": "GET",
+      "graphPathTemplate": "{url}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/paging",
+      "options": [
+        {
+          "name": "url",
+          "key": "url",
+          "required": true,
+          "description": "Full Graph v1.0 URL — copy the `@odata.nextLink` field from the previous response. Example: `https://graph.microsoft.com/v1.0/me/messages?$skiptoken=AKDsfg...`. Loop: keep calling until the response no longer contains `@odata.nextLink`. Also handles `@odata.deltaLink` if you want to resume a delta query."
+        }
+      ],
+      "example": "ask-marcel next-page --url 'https://graph.microsoft.com/v1.0/me/messages?$skip=10'",
+      "responseShape": "same shape as the originating endpoint (typically `{ value: [...], \"@odata.nextLink\": \"...\" }`)"
     },
     {
       "name": "search-calendar-events",
