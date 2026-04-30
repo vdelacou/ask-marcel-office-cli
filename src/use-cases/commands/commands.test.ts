@@ -89,7 +89,13 @@ import * as listTeamMembers from './list-team-members.ts';
 import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
+import * as searchCalendarEvents from './search-calendar-events.ts';
+import * as searchMailMessages from './search-mail-messages.ts';
+import * as searchMyDocuments from './search-my-documents.ts';
 import * as searchOnedriveFiles from './search-onedrive-files.ts';
+import * as searchOnenotePages from './search-onenote-pages.ts';
+import * as searchOutlookContacts from './search-outlook-contacts.ts';
+import * as searchSharepointSitesByName from './search-sharepoint-sites-by-name.ts';
 import * as searchSharepointSites from './search-sharepoint-sites.ts';
 
 const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
@@ -101,6 +107,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-drive-item-permissions': listDriveItemPermissions,
   'list-drive-item-versions': listDriveItemVersions,
   'search-onedrive-files': searchOnedriveFiles,
+  'search-my-documents': searchMyDocuments,
   'get-excel-range': getExcelRange,
   'list-excel-worksheets': listExcelWorksheets,
   'list-excel-tables': listExcelTables,
@@ -108,6 +115,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-excel-table-rows': listExcelTableRows,
   'get-drive-delta': getDriveDelta,
   'search-sharepoint-sites': searchSharepointSites,
+  'search-sharepoint-sites-by-name': searchSharepointSitesByName,
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
@@ -139,11 +147,13 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-mail-attachment': getMailAttachment,
   'list-mail-rules': listMailRules,
   'get-mailbox-settings': getMailboxSettings,
+  'search-mail-messages': searchMailMessages,
   'list-onenote-notebooks': listOnenoteNotebooks,
   'list-onenote-notebook-sections': listOnenoteNotebookSections,
   'list-all-onenote-sections': listAllOnenoteSections,
   'list-onenote-section-pages': listOnenoteSectionPages,
   'get-onenote-page-content': getOnenotePageContent,
+  'search-onenote-pages': searchOnenotePages,
   'get-current-user': getCurrentUser,
   'get-my-profile-photo': getMyProfilePhoto,
   'list-calendar-events': listCalendarEvents,
@@ -156,8 +166,10 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-calendars': listCalendars,
   'list-calendar-events-delta': listCalendarEventsDelta,
   'list-calendar-view-delta': listCalendarViewDelta,
+  'search-calendar-events': searchCalendarEvents,
   'list-outlook-contacts': listOutlookContacts,
   'get-outlook-contact': getOutlookContact,
+  'search-outlook-contacts': searchOutlookContacts,
   'list-chats': listChats,
   'get-chat': getChat,
   'list-chat-members': listChatMembers,
@@ -245,6 +257,42 @@ describe('commands', () => {
     if (result.ok) expect(result.value).toEqual({ value: [{ name: 'report.xlsx' }] });
   });
 
+  it('search-my-documents searches the user’s default OneDrive', async () => {
+    const result = await callCommand('search-my-documents', { query: 'budget' }, { value: [{ name: 'budget.xlsx' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ name: 'budget.xlsx' }] });
+  });
+
+  it('search-mail-messages searches the mailbox with $search', async () => {
+    const result = await callCommand('search-mail-messages', { query: 'invoice' }, { value: [{ subject: 'invoice 042' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'invoice 042' }] });
+  });
+
+  it('search-calendar-events searches calendar events with $search', async () => {
+    const result = await callCommand('search-calendar-events', { query: 'review' }, { value: [{ subject: 'Quarterly review' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'Quarterly review' }] });
+  });
+
+  it('search-outlook-contacts searches contacts with $search', async () => {
+    const result = await callCommand('search-outlook-contacts', { query: 'Alice' }, { value: [{ displayName: 'Alice Doe' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Alice Doe' }] });
+  });
+
+  it('search-onenote-pages searches OneNote pages with $search', async () => {
+    const result = await callCommand('search-onenote-pages', { query: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ title: 'Meeting notes 2026-04-30' }] });
+  });
+
+  it('search-sharepoint-sites-by-name searches sites with the search query parameter', async () => {
+    const result = await callCommand('search-sharepoint-sites-by-name', { query: 'marketing' }, { value: [{ displayName: 'Marketing site' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Marketing site' }] });
+  });
+
   it('get-excel-range returns cell values', async () => {
     const result = await callCommand(
       'get-excel-range',
@@ -326,6 +374,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-drive-item-permissions', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'list-drive-item-versions', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'search-onedrive-files', params: { driveId: 'd1', query: 'report' } },
+  { name: 'search-my-documents', params: { query: 'budget' } },
   { name: 'get-excel-range', params: { driveId: 'd1', itemId: 'i1', worksheetId: 'ws1', address: 'A1' } },
   { name: 'list-excel-worksheets', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'list-excel-tables', params: { driveId: 'd1', itemId: 'i1' } },
@@ -333,6 +382,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-excel-table-rows', params: { driveId: 'd1', itemId: 'i1', tableId: 't1' } },
   { name: 'get-drive-delta', params: { driveId: 'd1', itemId: 'i1' } },
   { name: 'search-sharepoint-sites', params: {} },
+  { name: 'search-sharepoint-sites-by-name', params: { query: 'marketing' } },
   { name: 'get-sharepoint-site', params: { siteId: 's1' } },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' } },
@@ -364,11 +414,13 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-mail-attachment', params: { messageId: 'm1', attachmentId: 'a1' } },
   { name: 'list-mail-rules', params: { mailFolderId: 'f1' } },
   { name: 'get-mailbox-settings', params: {} },
+  { name: 'search-mail-messages', params: { query: 'invoice' } },
   { name: 'list-onenote-notebooks', params: {} },
   { name: 'list-onenote-notebook-sections', params: { notebookId: 'n1' } },
   { name: 'list-all-onenote-sections', params: {} },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' } },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' } },
+  { name: 'search-onenote-pages', params: { query: 'meeting' } },
   { name: 'get-current-user', params: {} },
   { name: 'get-my-profile-photo', params: {} },
   { name: 'list-calendar-events', params: {} },
@@ -381,8 +433,10 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-calendars', params: {} },
   { name: 'list-calendar-events-delta', params: {} },
   { name: 'list-calendar-view-delta', params: {} },
+  { name: 'search-calendar-events', params: { query: 'review' } },
   { name: 'list-outlook-contacts', params: {} },
   { name: 'get-outlook-contact', params: { contactId: 'c1' } },
+  { name: 'search-outlook-contacts', params: { query: 'Alice' } },
   { name: 'list-chats', params: {} },
   { name: 'get-chat', params: { chatId: 'ch1' } },
   { name: 'list-chat-members', params: { chatId: 'ch1' } },
@@ -432,6 +486,12 @@ describe('command schema rejection', () => {
     { name: 'list-team-channels', params: {} },
     { name: 'get-team-channel', params: { teamId: 'tm1' } },
     { name: 'download-onedrive-file-content', params: { driveId: 'd1' } },
+    { name: 'search-mail-messages', params: {} },
+    { name: 'search-my-documents', params: {} },
+    { name: 'search-calendar-events', params: {} },
+    { name: 'search-outlook-contacts', params: {} },
+    { name: 'search-onenote-pages', params: {} },
+    { name: 'search-sharepoint-sites-by-name', params: {} },
   ];
 
   it.each(rejectCases)('$name rejects missing required params', async ({ name, params }) => {
@@ -455,6 +515,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-drive-item-permissions', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1/permissions' },
   { name: 'list-drive-item-versions', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1/versions' },
   { name: 'search-onedrive-files', params: { driveId: 'd1', query: 'report' }, expectedPath: "/drives/d1/search(q='report')" },
+  { name: 'search-my-documents', params: { query: 'budget' }, expectedPath: "/me/drive/search(q='budget')" },
   {
     name: 'get-excel-range',
     params: { driveId: 'd1', itemId: 'i1', worksheetId: 'ws1', address: 'A1' },
@@ -466,6 +527,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-excel-table-rows', params: { driveId: 'd1', itemId: 'i1', tableId: 't1' }, expectedPath: '/drives/d1/items/i1/workbook/tables/t1/rows' },
   { name: 'get-drive-delta', params: { driveId: 'd1', itemId: 'i1' }, expectedPath: '/drives/d1/items/i1/delta()' },
   { name: 'search-sharepoint-sites', params: {}, expectedPath: '/sites' },
+  { name: 'search-sharepoint-sites-by-name', params: { query: 'marketing' }, expectedPath: '/sites?search=marketing' },
   { name: 'get-sharepoint-site', params: { siteId: 's1' }, expectedPath: '/sites/s1' },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' }, expectedPath: '/sites/s1/drives' },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' }, expectedPath: '/sites/s1/drives/d1' },
@@ -497,11 +559,13 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'get-mail-attachment', params: { messageId: 'm1', attachmentId: 'a1' }, expectedPath: '/me/messages/m1/attachments/a1' },
   { name: 'list-mail-rules', params: { mailFolderId: 'f1' }, expectedPath: '/me/mailFolders/f1/messageRules' },
   { name: 'get-mailbox-settings', params: {}, expectedPath: '/me/mailboxSettings' },
+  { name: 'search-mail-messages', params: { query: 'invoice' }, expectedPath: '/me/messages?$search="invoice"' },
   { name: 'list-onenote-notebooks', params: {}, expectedPath: '/me/onenote/notebooks' },
   { name: 'list-onenote-notebook-sections', params: { notebookId: 'n1' }, expectedPath: '/me/onenote/notebooks/n1/sections' },
   { name: 'list-all-onenote-sections', params: {}, expectedPath: '/me/onenote/sections' },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' }, expectedPath: '/me/onenote/sections/s1/pages' },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' }, expectedPath: '/me/onenote/pages/p1/content' },
+  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: '/me/onenote/pages?$search=meeting' },
   { name: 'get-current-user', params: {}, expectedPath: '/me' },
   { name: 'get-my-profile-photo', params: {}, expectedPath: '/me/photo/$value' },
   { name: 'list-calendar-events', params: {}, expectedPath: '/me/events' },
@@ -514,8 +578,10 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-calendars', params: {}, expectedPath: '/me/calendars' },
   { name: 'list-calendar-events-delta', params: {}, expectedPath: '/me/events/delta()' },
   { name: 'list-calendar-view-delta', params: {}, expectedPath: '/me/calendarView/delta()' },
+  { name: 'search-calendar-events', params: { query: 'review' }, expectedPath: '/me/events?$search="review"' },
   { name: 'list-outlook-contacts', params: {}, expectedPath: '/me/contacts' },
   { name: 'get-outlook-contact', params: { contactId: 'c1' }, expectedPath: '/me/contacts/c1' },
+  { name: 'search-outlook-contacts', params: { query: 'Alice' }, expectedPath: '/me/contacts?$search="Alice"' },
   { name: 'list-chats', params: {}, expectedPath: '/me/chats' },
   { name: 'get-chat', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1' },
   { name: 'list-chat-members', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1/members' },

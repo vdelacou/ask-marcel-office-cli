@@ -27,6 +27,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-drive-item-versions` | List the historical versions of a OneDrive / SharePoint file (each save creates a new version). | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/versions` |
 | `list-drives` | List all OneDrive / SharePoint drives the signed-in user has access to. | _(none)_ | `GET /me/drives` |
 | `list-folder-files` | List the children (files and subfolders) of a folder in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/children` |
+| `search-my-documents` | Search the signed-in user’s default OneDrive for documents matching a free-text query (filename, content, metadata). | `--query` | `GET /me/drive/search(q='{query}')` |
 | `search-onedrive-files` | Search a single OneDrive / SharePoint drive for files and folders matching a free-text query. | `--drive-id`, `--query` | `GET /drives/{drive-id}/search(q='{query}')` |
 
 ### Excel (workbook files)
@@ -55,6 +56,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-sharepoint-site-list-items` | List the rows (listItem resources) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}/items` |
 | `list-sharepoint-site-lists` | List all SharePoint lists (custom + built-in document libraries) on a site. | `--site-id` | `GET /sites/{site-id}/lists` |
 | `search-sharepoint-sites` | List the SharePoint sites the signed-in user has access to (returns the followed sites by default). | _(none)_ | `GET /sites` |
+| `search-sharepoint-sites-by-name` | Search the tenant for SharePoint sites whose display name or description matches a free-text query (returns up to 25). | `--query` | `GET /sites?search={query}` |
 
 ### Tasks (To Do + Planner)
 
@@ -85,6 +87,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-mail-folders` | List the top-level mail folders in the signed-in user’s Outlook mailbox (Inbox, Sent Items, etc.). | _(none)_ | `GET /me/mailFolders` |
 | `list-mail-messages` | List the most recent messages in the signed-in user’s default Outlook inbox (no filter). | _(none)_ | `GET /me/messages` |
 | `list-mail-rules` | List the inbox / folder rules attached to a single Outlook mail folder. | `--mail-folder-id` | `GET /me/mailFolders/{mail-folder-id}/messageRules` |
+| `search-mail-messages` | Search the signed-in user’s entire Outlook mailbox using KQL or free text. Results are ranked by Graph relevance. | `--query` | `GET /me/messages?$search="{query}"` |
 
 ### Notes (OneNote)
 
@@ -95,6 +98,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
 | `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |
 | `list-onenote-section-pages` | List the pages inside a single OneNote section. | `--onenote-section-id` | `GET /me/onenote/sections/{onenote-section-id}/pages` |
+| `search-onenote-pages` | Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook. | `--query` | `GET /me/onenote/pages?$search={query}` |
 
 ### User
 
@@ -117,6 +121,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-calendar-view-delta` | Get the incremental change set of expanded calendar-view occurrences over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL on the first call (not yet exposed as a CLI flag). | _(none)_ | `GET /me/calendarView/delta()` |
 | `list-calendars` | List the calendars in the signed-in user’s mailbox (default + secondary calendars + shared calendars). | _(none)_ | `GET /me/calendars` |
 | `list-specific-calendar-events` | List the events in a specific (non-default) calendar (does not expand recurrences). | `--calendar-id` | `GET /me/calendars/{calendar-id}/events` |
+| `search-calendar-events` | Search the signed-in user’s calendar events using KQL or free text. Matches subject, body, and location. | `--query` | `GET /me/events?$search="{query}"` |
 
 ### Contacts
 
@@ -124,6 +129,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 |---------|-------------|-----------------|----------------|
 | `get-outlook-contact` | Get a single personal Outlook contact by its ID. | `--contact-id` | `GET /me/contacts/{contact-id}` |
 | `list-outlook-contacts` | List the personal Outlook contacts in the signed-in user’s default contacts folder. | _(none)_ | `GET /me/contacts` |
+| `search-outlook-contacts` | Search the signed-in user’s Outlook contacts using KQL or free text. Matches name, email, company, and phone fields. | `--query` | `GET /me/contacts?$search="{query}"` |
 
 ### Chats
 

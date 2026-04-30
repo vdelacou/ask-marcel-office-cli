@@ -83,7 +83,13 @@ import * as listTeamMembers from './list-team-members.ts';
 import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
+import * as searchCalendarEvents from './search-calendar-events.ts';
+import * as searchMailMessages from './search-mail-messages.ts';
+import * as searchMyDocuments from './search-my-documents.ts';
 import * as searchOnedriveFiles from './search-onedrive-files.ts';
+import * as searchOnenotePages from './search-onenote-pages.ts';
+import * as searchOutlookContacts from './search-outlook-contacts.ts';
+import * as searchSharepointSitesByName from './search-sharepoint-sites-by-name.ts';
 import * as searchSharepointSites from './search-sharepoint-sites.ts';
 
 const commands: Record<string, Command> = {
@@ -95,6 +101,7 @@ const commands: Record<string, Command> = {
   'list-drive-item-permissions': listDriveItemPermissions,
   'list-drive-item-versions': listDriveItemVersions,
   'search-onedrive-files': searchOnedriveFiles,
+  'search-my-documents': searchMyDocuments,
   'get-excel-range': getExcelRange,
   'list-excel-worksheets': listExcelWorksheets,
   'list-excel-tables': listExcelTables,
@@ -102,6 +109,7 @@ const commands: Record<string, Command> = {
   'list-excel-table-rows': listExcelTableRows,
   'get-drive-delta': getDriveDelta,
   'search-sharepoint-sites': searchSharepointSites,
+  'search-sharepoint-sites-by-name': searchSharepointSitesByName,
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
@@ -133,11 +141,13 @@ const commands: Record<string, Command> = {
   'get-mail-attachment': getMailAttachment,
   'list-mail-rules': listMailRules,
   'get-mailbox-settings': getMailboxSettings,
+  'search-mail-messages': searchMailMessages,
   'list-onenote-notebooks': listOnenoteNotebooks,
   'list-onenote-notebook-sections': listOnenoteNotebookSections,
   'list-all-onenote-sections': listAllOnenoteSections,
   'list-onenote-section-pages': listOnenoteSectionPages,
   'get-onenote-page-content': getOnenotePageContent,
+  'search-onenote-pages': searchOnenotePages,
   'get-current-user': getCurrentUser,
   'get-my-profile-photo': getMyProfilePhoto,
   'list-calendar-events': listCalendarEvents,
@@ -150,8 +160,10 @@ const commands: Record<string, Command> = {
   'list-calendars': listCalendars,
   'list-calendar-events-delta': listCalendarEventsDelta,
   'list-calendar-view-delta': listCalendarViewDelta,
+  'search-calendar-events': searchCalendarEvents,
   'list-outlook-contacts': listOutlookContacts,
   'get-outlook-contact': getOutlookContact,
+  'search-outlook-contacts': searchOutlookContacts,
   'list-chats': listChats,
   'get-chat': getChat,
   'list-chat-members': listChatMembers,
