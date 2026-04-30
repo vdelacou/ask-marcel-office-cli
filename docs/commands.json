@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.2.0",
-  "generatedAt": "2026-04-30T04:01:45.493Z",
+  "version": "0.2.1",
+  "generatedAt": "2026-04-30T04:12:20.267Z",
   "commands": [
     {
       "name": "download-onedrive-file-content",

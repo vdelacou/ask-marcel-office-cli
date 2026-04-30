@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import type { AuthManager } from '../infra/auth.ts';
 import type { GraphClient } from '../infra/graph-client.ts';
 import { render, renderError } from '../presenter/output.ts';
-import { buildManifest, renderSingleCommand } from '../use-cases/commands/docs.ts';
+import { renderSingleCommand } from '../use-cases/commands/docs.ts';
 import { CATEGORY_LABELS, CATEGORY_ORDER } from '../use-cases/commands/docs-render.ts';
 import { commands as cmdRegistry } from '../use-cases/commands/index.ts';
 import * as login from '../use-cases/commands/login.ts';
@@ -20,8 +20,6 @@ type BuildCliDeps = {
   readonly version?: string;
   readonly packageManager?: 'npm' | 'bun';
 };
-
-const PACKAGE_NAME = 'ask-marcel-office-cli';
 
 const buildCli = (deps: BuildCliDeps): Command => {
   const { auth, graph, logger, processRunner, version } = deps;
@@ -65,19 +63,9 @@ const buildCli = (deps: BuildCliDeps): Command => {
 
   program
     .command('docs')
-    .description('Print Markdown docs for a single command, or `--json` for the full manifest')
-    .argument('[command]', 'Command name to show docs for (omit when using --json)')
-    .option('--json', 'Print the full machine-readable JSON manifest of every command')
-    .action((commandName: string | undefined, options: { json?: boolean }) => {
-      if (options.json) {
-        const manifest = buildManifest(cmdRegistry, PACKAGE_NAME, version ?? '0.0.0');
-        render(manifest, logger);
-        return;
-      }
-      if (!commandName) {
-        renderError('Provide a command name (e.g. `ask-marcel docs get-current-user`) or use `--json` for the full manifest.', logger);
-        return;
-      }
+    .description('Print Markdown docs for a single command')
+    .argument('<command>', 'Command name to show docs for (run `ask-marcel --help` to list every command)')
+    .action((commandName: string) => {
       const result = renderSingleCommand(cmdRegistry, commandName);
       if (result.ok) process.stdout.write(`${result.value}\n`);
       else renderError(`Unknown command "${result.error.name}". Run \`ask-marcel --help\` to list every command.`, logger);

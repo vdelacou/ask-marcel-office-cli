@@ -11,7 +11,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `login` | Authenticate (cached → refresh → browser fallback) |
 | `logout` | Clear cached tokens |
 | `update` | Update ask-marcel to the latest version on npm (auto-detects npm vs bun) |
-| `docs <cmd>` | Print Markdown docs for a single command (also: `docs --json` for the full manifest) |
+| `docs <cmd>` | Print Markdown docs for a single command (full machine-readable manifest at [`docs/commands.json`](docs/commands.json) or via `import manifest from 'ask-marcel-office-cli/commands.json'`) |
 
 <!-- AUTO-GENERATED-COMMANDS:BEGIN -->
 
