@@ -77,7 +77,6 @@ import * as listPlanBuckets from './list-plan-buckets.ts';
 import * as listPlanTasks from './list-plan-tasks.ts';
 import * as listPlannerTasks from './list-planner-tasks.ts';
 import * as listSharepointSiteDrives from './list-sharepoint-site-drives.ts';
-import * as listSharepointSiteItems from './list-sharepoint-site-items.ts';
 import * as listSharepointSiteListItems from './list-sharepoint-site-list-items.ts';
 import * as listSharepointSiteLists from './list-sharepoint-site-lists.ts';
 import * as listSpecificCalendarEvents from './list-specific-calendar-events.ts';
@@ -87,7 +86,6 @@ import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
 import * as nextPage from './next-page.ts';
-import * as searchCalendarEvents from './search-calendar-events.ts';
 import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
 import * as searchMyDocuments from './search-my-documents.ts';
@@ -119,7 +117,6 @@ const commands: Record<string, Command> = {
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
-  'list-sharepoint-site-items': listSharepointSiteItems,
   'get-sharepoint-site-item': getSharepointSiteItem,
   'list-sharepoint-site-lists': listSharepointSiteLists,
   'get-sharepoint-site-list': getSharepointSiteList,
@@ -168,7 +165,6 @@ const commands: Record<string, Command> = {
   'list-calendars': listCalendars,
   'list-calendar-events-delta': listCalendarEventsDelta,
   'list-calendar-view-delta': listCalendarViewDelta,
-  'search-calendar-events': searchCalendarEvents,
   'list-outlook-contacts': listOutlookContacts,
   'get-outlook-contact': getOutlookContact,
   'search-outlook-contacts': searchOutlookContacts,

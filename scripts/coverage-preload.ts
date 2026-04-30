@@ -49,7 +49,6 @@ import '../src/use-cases/commands/search-sharepoint-sites.ts';
 import '../src/use-cases/commands/get-sharepoint-site.ts';
 import '../src/use-cases/commands/list-sharepoint-site-drives.ts';
 import '../src/use-cases/commands/get-sharepoint-site-drive-by-id.ts';
-import '../src/use-cases/commands/list-sharepoint-site-items.ts';
 import '../src/use-cases/commands/get-sharepoint-site-item.ts';
 import '../src/use-cases/commands/list-sharepoint-site-lists.ts';
 import '../src/use-cases/commands/get-sharepoint-site-list.ts';

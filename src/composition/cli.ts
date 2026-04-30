@@ -19,11 +19,17 @@ type BuildCliDeps = {
   readonly processRunner: ProcessRunner;
   readonly version?: string;
   readonly packageManager?: 'npm' | 'bun';
+  readonly onCommandError?: () => void;
 };
 
 const buildCli = (deps: BuildCliDeps): Command => {
   const { auth, graph, logger, processRunner, version } = deps;
   const program = new Command();
+
+  const fail = (message: string): void => {
+    renderError(message, logger);
+    deps.onCommandError?.();
+  };
 
   program
     .name('ask-marcel')
@@ -38,7 +44,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
     .action(async () => {
       const result = await login.execute(auth);
       if (result.ok) render({ status: 'authenticated' }, logger);
-      else renderError(result.error.type === 'auth_cancelled' ? 'Authentication cancelled' : result.error.message, logger);
+      else fail(result.error.type === 'auth_cancelled' ? 'Authentication cancelled' : result.error.message);
     });
 
   program
@@ -47,7 +53,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
     .action(async () => {
       const result = await logout.execute(auth);
       if (result.ok) render({ status: 'logged_out' }, logger);
-      else renderError(result.error.type === 'auth_cancelled' ? 'Logout cancelled' : result.error.message, logger);
+      else fail(result.error.type === 'auth_cancelled' ? 'Logout cancelled' : result.error.message);
     });
 
   program
@@ -57,8 +63,8 @@ const buildCli = (deps: BuildCliDeps): Command => {
       const manager = deps.packageManager ?? detectPackageManager(process.argv[1] ?? '');
       const result = await update.execute(processRunner, manager);
       if (result.ok) render({ status: 'updated', via: manager }, logger);
-      else if (result.error.type === 'spawn_failed') renderError(`update failed: ${result.error.message}`, logger);
-      else renderError(`update install exited with code ${result.error.exitCode}`, logger);
+      else if (result.error.type === 'spawn_failed') fail(`update failed: ${result.error.message}`);
+      else fail(`update install exited with code ${result.error.exitCode}`);
     });
 
   program
@@ -68,7 +74,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
     .action((commandName: string) => {
       const result = renderSingleCommand(cmdRegistry, commandName);
       if (result.ok) process.stdout.write(`${result.value}\n`);
-      else renderError(`Unknown command "${result.error.name}". Run \`ask-marcel --help\` to list every command.`, logger);
+      else fail(`Unknown command "${result.error.name}". Run \`ask-marcel --help\` to list every command.`);
     });
 
   for (const category of CATEGORY_ORDER) {
@@ -88,7 +94,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
       commandDef.action(async (opts: Record<string, string>) => {
         const result = await cmd.execute(graph, opts);
         if (result.ok) render(result.value, logger);
-        else renderError(result.error.message, logger);
+        else fail(result.error.message);
       });
     }
   }

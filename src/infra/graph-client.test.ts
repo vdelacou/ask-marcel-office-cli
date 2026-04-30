@@ -106,6 +106,84 @@ describe('graph client', () => {
     }
   });
 
+  it('getBinary returns the Location header as @microsoft.graph.downloadUrl on a 302 redirect', async () => {
+    const fetchFn: FetchFn = async () => new Response(null, { status: 302, headers: { location: 'https://cdn.example/signed?token=abc' } });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/me/drive/items/i1/content');
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ '@microsoft.graph.downloadUrl': 'https://cdn.example/signed?token=abc' });
+  });
+
+  it('getBinary returns a 3xx without a Location header as an api_error', async () => {
+    const fetchFn: FetchFn = async () => new Response('weird', { status: 304 });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/me/photo/$value');
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.type === 'api_error') {
+      expect(result.error.status).toBe(304);
+    }
+  });
+
+  it('getBinary base64-encodes binary bodies and reports content-type and size', async () => {
+    const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
+    const fetchFn: FetchFn = async () => new Response(bytes, { status: 200, headers: { 'content-type': 'image/jpeg' } });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/me/photo/$value');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const v = result.value as { contentType: string; size: number; base64: string };
+      expect(v.contentType).toBe('image/jpeg');
+      expect(v.size).toBe(4);
+      expect(v.base64).toBe(btoa(String.fromCharCode(0xff, 0xd8, 0xff, 0xe0)));
+    }
+  });
+
+  it('getBinary returns parsed JSON when the response advertises application/json', async () => {
+    const fetchFn: FetchFn = async () => Response.json({ '@odata.context': 'foo', value: 'bar' });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/some/json/binary/endpoint');
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ '@odata.context': 'foo', value: 'bar' });
+  });
+
+  it('getBinary returns api_error on a non-redirect non-OK response', async () => {
+    const fetchFn: FetchFn = async () =>
+      new Response(JSON.stringify({ error: { message: 'no permission' } }), {
+        status: 403,
+        headers: { 'content-type': 'application/json' },
+      });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/me/photo/$value');
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.type === 'api_error') {
+      expect(result.error.status).toBe(403);
+      expect(result.error.message).toBe('no permission');
+    }
+  });
+
+  it('getBinary surfaces auth_failed when the auth manager fails', async () => {
+    const failingAuth: AuthManager = {
+      getAccessToken: async () => ({ ok: false, error: { type: 'auth_failed', message: 'token gone' } }),
+      logout: async () => ok(undefined),
+    };
+    const client = createGraphClient(failingAuth);
+    const result = await client.getBinary('/me/photo/$value');
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.type).toBe('auth_failed');
+  });
+
+  it('getBinary surfaces network_error when fetch throws', async () => {
+    const throwing: FetchFn = async () => {
+      throw new Error('socket');
+    };
+    const client = createGraphClient(fakeAuth(), throwing);
+    const result = await client.getBinary('/me/photo/$value');
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.type === 'network_error') {
+      expect(result.error.message).toBe('socket');
+    }
+  });
+
   it('makes authenticated POST requests with a JSON-serialised body', async () => {
     let captured: { url: string; method?: string; body?: string } | null = null;
     const fetchFn: FetchFn = async (url, init) => {

@@ -19,8 +19,8 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
-| `download-drive-item-version-content` | Download (or follow the redirect to) the binary content of a specific historical version of a OneDrive / SharePoint file. | `--drive-id`, `--item-id`, `--version-id` | `GET /drives/{drive-id}/items/{item-id}/versions/{version-id}/content` |
-| `download-onedrive-file-content` | Download (or follow the redirect to) the binary content of a file stored in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/content` |
+| `download-drive-item-version-content` | Download the binary content of a specific historical version of a OneDrive / SharePoint file. Same envelope as download-onedrive-file-content (302 → downloadUrl, or base64 bytes). | `--drive-id`, `--item-id`, `--version-id` | `GET /drives/{drive-id}/items/{item-id}/versions/{version-id}/content` |
+| `download-onedrive-file-content` | Download the binary content of a file stored in OneDrive / SharePoint. Graph normally returns a 302 redirect to a pre-signed CDN URL, surfaced as `@microsoft.graph.downloadUrl`; if it returns bytes directly they are base64-encoded for safe JSON output. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/content` |
 | `get-drive-delta` | Get the incremental change set (added / modified / deleted items) under a OneDrive / SharePoint folder. Use the `@odata.deltaLink` from a previous response to resume. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}/delta()` |
 | `get-drive-item` | Get the metadata (driveItem resource) of a single file or folder in OneDrive / SharePoint. | `--drive-id`, `--item-id` | `GET /drives/{drive-id}/items/{item-id}` |
 | `get-drive-root-item` | Get the root folder (driveItem) of a OneDrive / SharePoint drive. | `--drive-id` | `GET /drives/{drive-id}/root` |
@@ -53,7 +53,6 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `get-sharepoint-site-list-item` | Get a single row (listItem) of a SharePoint list by ID. | `--site-id`, `--list-id`, `--list-item-id` | `GET /sites/{site-id}/lists/{list-id}/items/{list-item-id}` |
 | `get-sharepoint-sites-delta` | Get the incremental change set of SharePoint sites in the tenant. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /sites/delta()` |
 | `list-sharepoint-site-drives` | List the document libraries (drives) attached to a SharePoint site. | `--site-id` | `GET /sites/{site-id}/drives` |
-| `list-sharepoint-site-items` | List the baseItem resources directly under a SharePoint site (typically pages and root-level items). | `--site-id` | `GET /sites/{site-id}/items` |
 | `list-sharepoint-site-list-items` | List the rows (listItem resources) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}/items` |
 | `list-sharepoint-site-lists` | List all SharePoint lists (custom + built-in document libraries) on a site. | `--site-id` | `GET /sites/{site-id}/lists` |
 | `search-sharepoint-sites` | List the SharePoint sites the signed-in user has access to (returns the followed sites by default). | _(none)_ | `GET /sites` |
@@ -101,30 +100,29 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
 | `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |
 | `list-onenote-section-pages` | List the pages inside a single OneNote section. | `--onenote-section-id` | `GET /me/onenote/sections/{onenote-section-id}/pages` |
-| `search-onenote-pages` | Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook. | `--query` | `GET /me/onenote/pages?$search={query}` |
+| `search-onenote-pages` | Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook. | `--query` | `GET /me/onenote/pages?search={query}` |
 
 ### User
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
 | `get-current-user` | Return the signed-in user’s Microsoft Graph profile (id, displayName, mail, jobTitle, etc.). | _(none)_ | `GET /me` |
-| `get-my-profile-photo` | Download the binary content of the signed-in user’s profile photo (largest available size). | _(none)_ | `GET /me/photo/$value` |
+| `get-my-profile-photo` | Download the signed-in user’s profile photo (largest available size). Returned as a base64 envelope so the binary survives JSON output. | _(none)_ | `GET /me/photo/$value` |
 
 ### Calendar
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
 | `get-calendar-event` | Fetch a single calendar event by ID from the signed-in user’s default calendar. | `--event-id` | `GET /me/events/{event-id}` |
-| `get-calendar-view` | List the calendar events in the signed-in user’s default calendar with recurrence expanded into individual occurrences. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag). | _(none)_ | `GET /me/calendarView` |
+| `get-calendar-view` | List the signed-in user’s default-calendar events with recurrence expanded into individual occurrences in a date range. Both ISO date-time params are required by Graph. | `--start-date-time`, `--end-date-time` | `GET /me/calendarView?startDateTime={start-date-time}&endDateTime={end-date-time}` |
 | `get-specific-calendar-event` | Fetch a single calendar event by ID from a specific (non-default) calendar. | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}` |
 | `get-specific-calendar-view` | List the events in a specific (non-default) calendar with recurrence expanded into individual occurrences. | `--calendar-id` | `GET /me/calendars/{calendar-id}/calendarView` |
 | `list-calendar-event-instances` | List the individual occurrences of a recurring calendar event over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag). | `--calendar-id`, `--event-id` | `GET /me/calendars/{calendar-id}/events/{event-id}/instances` |
 | `list-calendar-events` | List the events in the signed-in user’s default calendar (does not expand recurrences). | _(none)_ | `GET /me/events` |
 | `list-calendar-events-delta` | Get the incremental change set (added / modified / deleted events) for the signed-in user’s default calendar. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /me/events/delta()` |
-| `list-calendar-view-delta` | Get the incremental change set of expanded calendar-view occurrences over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL on the first call (not yet exposed as a CLI flag). | _(none)_ | `GET /me/calendarView/delta()` |
+| `list-calendar-view-delta` | Get the first page of the incremental change set of expanded calendar-view occurrences over a date range. Subsequent pages: feed the returned `@odata.nextLink` to `next-page`; resume later via the `@odata.deltaLink`. | `--start-date-time`, `--end-date-time` | `GET /me/calendarView/delta()?startDateTime={start-date-time}&endDateTime={end-date-time}` |
 | `list-calendars` | List the calendars in the signed-in user’s mailbox (default + secondary calendars + shared calendars). | _(none)_ | `GET /me/calendars` |
 | `list-specific-calendar-events` | List the events in a specific (non-default) calendar (does not expand recurrences). | `--calendar-id` | `GET /me/calendars/{calendar-id}/events` |
-| `search-calendar-events` | Search the signed-in user’s calendar events using KQL or free text. Matches subject, body, and location. | `--query` | `GET /me/events?$search="{query}"` |
 
 ### Contacts
 

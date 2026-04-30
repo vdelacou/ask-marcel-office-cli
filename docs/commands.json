@@ -1,11 +1,11 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.3.1",
-  "generatedAt": "2026-04-30T07:16:03.044Z",
+  "version": "0.4.0",
+  "generatedAt": "2026-04-30T07:38:36.694Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
-      "summary": "Download (or follow the redirect to) the binary content of a specific historical version of a OneDrive / SharePoint file.",
+      "summary": "Download the binary content of a specific historical version of a OneDrive / SharePoint file. Same envelope as download-onedrive-file-content (302 → downloadUrl, or base64 bytes).",
       "category": "drive",
       "graphMethod": "GET",
       "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/versions/{version-id}/content",
@@ -31,11 +31,11 @@
         }
       ],
       "example": "ask-marcel download-drive-item-version-content --drive-id 'b!1234' --item-id '01ABC' --version-id '4.0'",
-      "responseShape": "binary content of the historical version (or a 302 redirect to a pre-signed CDN URL)"
+      "responseShape": "`{ \"@microsoft.graph.downloadUrl\": \"...\" }` for the typical 302 case, or `{ contentType, size, base64 }` when Graph streams bytes directly"
     },
     {
       "name": "download-onedrive-file-content",
-      "summary": "Download (or follow the redirect to) the binary content of a file stored in OneDrive / SharePoint.",
+      "summary": "Download the binary content of a file stored in OneDrive / SharePoint. Graph normally returns a 302 redirect to a pre-signed CDN URL, surfaced as `@microsoft.graph.downloadUrl`; if it returns bytes directly they are base64-encoded for safe JSON output.",
       "category": "drive",
       "graphMethod": "GET",
       "graphPathTemplate": "/drives/{drive-id}/items/{item-id}/content",
@@ -55,7 +55,7 @@
         }
       ],
       "example": "ask-marcel download-onedrive-file-content --drive-id 'b!1234' --item-id '01ABC'",
-      "responseShape": "binary content (or a 302 redirect to a pre-signed CDN URL)"
+      "responseShape": "`{ \"@microsoft.graph.downloadUrl\": \"...\" }` for the typical 302 case, or `{ contentType, size, base64 }` when Graph streams bytes directly"
     },
     {
       "name": "get-calendar-event",
@@ -77,13 +77,26 @@
     },
     {
       "name": "get-calendar-view",
-      "summary": "List the calendar events in the signed-in user’s default calendar with recurrence expanded into individual occurrences. Pass `?startDateTime=…&endDateTime=…` via the URL to filter (not yet exposed as a CLI flag).",
+      "summary": "List the signed-in user’s default-calendar events with recurrence expanded into individual occurrences in a date range. Both ISO date-time params are required by Graph.",
       "category": "calendar",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/calendarView",
+      "graphPathTemplate": "/me/calendarView?startDateTime={start-date-time}&endDateTime={end-date-time}",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-calendarview",
-      "options": [],
-      "example": "ask-marcel get-calendar-view",
+      "options": [
+        {
+          "name": "start-date-time",
+          "key": "startDateTime",
+          "required": true,
+          "description": "ISO 8601 lower bound (UTC). Example: `2026-04-01T00:00:00Z`. Required by Graph; the request fails without it."
+        },
+        {
+          "name": "end-date-time",
+          "key": "endDateTime",
+          "required": true,
+          "description": "ISO 8601 upper bound (UTC). Example: `2026-05-01T00:00:00Z`. Required by Graph; the request fails without it."
+        }
+      ],
+      "example": "ask-marcel get-calendar-view --start-date-time '2026-04-01T00:00:00Z' --end-date-time '2026-05-01T00:00:00Z'",
       "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
     },
     {
@@ -446,14 +459,14 @@
     },
     {
       "name": "get-my-profile-photo",
-      "summary": "Download the binary content of the signed-in user’s profile photo (largest available size).",
+      "summary": "Download the signed-in user’s profile photo (largest available size). Returned as a base64 envelope so the binary survives JSON output.",
       "category": "user",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/photo/$value",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/profilephoto-get",
       "options": [],
       "example": "ask-marcel get-my-profile-photo",
-      "responseShape": "binary image bytes (typically image/jpeg)"
+      "responseShape": "`{ contentType: \"image/jpeg\", size: <bytes>, base64: \"<encoded>\" }` (or `{ \"@microsoft.graph.downloadUrl\": \"...\" }` when Graph returns a 302 redirect to a CDN URL)"
     },
     {
       "name": "get-onenote-page-content",
@@ -885,13 +898,26 @@
     },
     {
       "name": "list-calendar-view-delta",
-      "summary": "Get the incremental change set of expanded calendar-view occurrences over a date range. Pass `?startDateTime=…&endDateTime=…` via the URL on the first call (not yet exposed as a CLI flag).",
+      "summary": "Get the first page of the incremental change set of expanded calendar-view occurrences over a date range. Subsequent pages: feed the returned `@odata.nextLink` to `next-page`; resume later via the `@odata.deltaLink`.",
       "category": "calendar",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/calendarView/delta()",
+      "graphPathTemplate": "/me/calendarView/delta()?startDateTime={start-date-time}&endDateTime={end-date-time}",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/event-delta",
-      "options": [],
-      "example": "ask-marcel list-calendar-view-delta",
+      "options": [
+        {
+          "name": "start-date-time",
+          "key": "startDateTime",
+          "required": true,
+          "description": "ISO 8601 lower bound (UTC). Required on the first call only — the deltaLink token encodes it for resumes."
+        },
+        {
+          "name": "end-date-time",
+          "key": "endDateTime",
+          "required": true,
+          "description": "ISO 8601 upper bound (UTC). Required on the first call only — the deltaLink token encodes it for resumes."
+        }
+      ],
+      "example": "ask-marcel list-calendar-view-delta --start-date-time '2026-04-01T00:00:00Z' --end-date-time '2026-05-01T00:00:00Z'",
       "responseShape": "collection of changed Microsoft Graph `event` occurrences under `value[]` plus an `@odata.deltaLink` token"
     },
     {
@@ -1545,24 +1571,6 @@
       "responseShape": "collection of Microsoft Graph `drive` resources under `value[]`"
     },
     {
-      "name": "list-sharepoint-site-items",
-      "summary": "List the baseItem resources directly under a SharePoint site (typically pages and root-level items).",
-      "category": "sharepoint",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/sites/{site-id}/items",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/baseitem-list",
-      "options": [
-        {
-          "name": "site-id",
-          "key": "siteId",
-          "required": true,
-          "description": "SharePoint site ID. Returned by `ask-marcel search-sharepoint-sites`."
-        }
-      ],
-      "example": "ask-marcel list-sharepoint-site-items --site-id 'contoso.sharepoint.com,1234,5678'",
-      "responseShape": "collection of Microsoft Graph `baseItem` resources under `value[]`"
-    },
-    {
       "name": "list-sharepoint-site-list-items",
       "summary": "List the rows (listItem resources) of a single SharePoint list.",
       "category": "sharepoint",
@@ -1730,24 +1738,6 @@
       "responseShape": "same shape as the originating endpoint (typically `{ value: [...], \"@odata.nextLink\": \"...\" }`)"
     },
     {
-      "name": "search-calendar-events",
-      "summary": "Search the signed-in user’s calendar events using KQL or free text. Matches subject, body, and location.",
-      "category": "calendar",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/me/events?$search=\"{query}\"",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-events",
-      "options": [
-        {
-          "name": "query",
-          "key": "query",
-          "required": true,
-          "description": "KQL or free-text query. Searches event subject, body, and location across every calendar of the signed-in user. Examples: `quarterly review`, `subject:1:1`, `location:Paris`."
-        }
-      ],
-      "example": "ask-marcel search-calendar-events --query 'quarterly review'",
-      "responseShape": "collection of Microsoft Graph `event` resources under `value[]`, ranked by relevance"
-    },
-    {
       "name": "search-graph-messages",
       "summary": "Search Microsoft Teams channel messages and 1:1 / group chat messages with a free-text or KQL query (Microsoft Search API).",
       "category": "teams",
@@ -1831,7 +1821,7 @@
       "summary": "Search the signed-in user’s OneNote pages by free-text. Matches page title and visible text content across every notebook.",
       "category": "notes",
       "graphMethod": "GET",
-      "graphPathTemplate": "/me/onenote/pages?$search={query}",
+      "graphPathTemplate": "/me/onenote/pages?search={query}",
       "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/onenote-list-pages",
       "options": [
         {

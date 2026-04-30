@@ -41,11 +41,13 @@ const failedAuth = (): AuthManager => ({
 const okGraph = (value: unknown): GraphClient => ({
   get: async () => ({ ok: true, value }),
   post: async () => ({ ok: true, value }),
+  getBinary: async () => ({ ok: true, value }),
 });
 
 const errGraph = (error: GraphError): GraphClient => ({
   get: async () => ({ ok: false, error }),
   post: async () => ({ ok: false, error }),
+  getBinary: async () => ({ ok: false, error }),
 });
 
 describe('buildCli command surface', () => {
@@ -61,6 +63,38 @@ describe('buildCli command surface', () => {
     const cli = buildCli({ auth: cancelledAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
     const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
     expect(out).toContain('Authentication cancelled');
+  });
+
+  it('invokes onCommandError exactly once when a command fails', async () => {
+    const logger = createLoggerFake();
+    let errorReports = 0;
+    const cli = buildCli({
+      auth: cancelledAuth(),
+      graph: okGraph({}),
+      logger,
+      processRunner: createProcessRunnerFake(),
+      onCommandError: () => {
+        errorReports += 1;
+      },
+    });
+    await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
+    expect(errorReports).toBe(1);
+  });
+
+  it('does not invoke onCommandError when a command succeeds', async () => {
+    const logger = createLoggerFake();
+    let errorReports = 0;
+    const cli = buildCli({
+      auth: okAuth(),
+      graph: okGraph({}),
+      logger,
+      processRunner: createProcessRunnerFake(),
+      onCommandError: () => {
+        errorReports += 1;
+      },
+    });
+    await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'login']));
+    expect(errorReports).toBe(0);
   });
 
   it('renders the underlying message when login fails for a non-cancellation reason', async () => {

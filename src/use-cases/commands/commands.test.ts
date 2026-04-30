@@ -83,7 +83,6 @@ import * as listPlanBuckets from './list-plan-buckets.ts';
 import * as listPlanTasks from './list-plan-tasks.ts';
 import * as listPlannerTasks from './list-planner-tasks.ts';
 import * as listSharepointSiteDrives from './list-sharepoint-site-drives.ts';
-import * as listSharepointSiteItems from './list-sharepoint-site-items.ts';
 import * as listSharepointSiteListItems from './list-sharepoint-site-list-items.ts';
 import * as listSharepointSiteLists from './list-sharepoint-site-lists.ts';
 import * as listSpecificCalendarEvents from './list-specific-calendar-events.ts';
@@ -93,7 +92,6 @@ import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
 import * as nextPage from './next-page.ts';
-import * as searchCalendarEvents from './search-calendar-events.ts';
 import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
 import * as searchMyDocuments from './search-my-documents.ts';
@@ -125,7 +123,6 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-sharepoint-site': getSharepointSite,
   'list-sharepoint-site-drives': listSharepointSiteDrives,
   'get-sharepoint-site-drive-by-id': getSharepointSiteDriveById,
-  'list-sharepoint-site-items': listSharepointSiteItems,
   'get-sharepoint-site-item': getSharepointSiteItem,
   'list-sharepoint-site-lists': listSharepointSiteLists,
   'get-sharepoint-site-list': getSharepointSiteList,
@@ -174,7 +171,6 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-calendars': listCalendars,
   'list-calendar-events-delta': listCalendarEventsDelta,
   'list-calendar-view-delta': listCalendarViewDelta,
-  'search-calendar-events': searchCalendarEvents,
   'list-outlook-contacts': listOutlookContacts,
   'get-outlook-contact': getOutlookContact,
   'search-outlook-contacts': searchOutlookContacts,
@@ -280,19 +276,13 @@ describe('commands', () => {
     if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'invoice 042' }] });
   });
 
-  it('search-calendar-events searches calendar events with $search', async () => {
-    const result = await callCommand('search-calendar-events', { query: 'review' }, { value: [{ subject: 'Quarterly review' }] });
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'Quarterly review' }] });
-  });
-
   it('search-outlook-contacts searches contacts with $search', async () => {
     const result = await callCommand('search-outlook-contacts', { query: 'Alice' }, { value: [{ displayName: 'Alice Doe' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Alice Doe' }] });
   });
 
-  it('search-onenote-pages searches OneNote pages with $search', async () => {
+  it('search-onenote-pages searches OneNote pages with the OneNote `?search=` query parameter (no leading $)', async () => {
     const result = await callCommand('search-onenote-pages', { query: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.value).toEqual({ value: [{ title: 'Meeting notes 2026-04-30' }] });
@@ -455,7 +445,6 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-sharepoint-site', params: { siteId: 's1' } },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' } },
-  { name: 'list-sharepoint-site-items', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-item', params: { siteId: 's1', baseItemId: 'b1' } },
   { name: 'list-sharepoint-site-lists', params: { siteId: 's1' } },
   { name: 'get-sharepoint-site-list', params: { siteId: 's1', listId: 'l1' } },
@@ -498,13 +487,12 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-calendar-event', params: { eventId: 'e1' } },
   { name: 'list-specific-calendar-events', params: { calendarId: 'c1' } },
   { name: 'get-specific-calendar-event', params: { calendarId: 'c1', eventId: 'e1' } },
-  { name: 'get-calendar-view', params: {} },
+  { name: 'get-calendar-view', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
   { name: 'get-specific-calendar-view', params: { calendarId: 'c1' } },
   { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' } },
   { name: 'list-calendars', params: {} },
   { name: 'list-calendar-events-delta', params: {} },
-  { name: 'list-calendar-view-delta', params: {} },
-  { name: 'search-calendar-events', params: { query: 'review' } },
+  { name: 'list-calendar-view-delta', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
   { name: 'list-outlook-contacts', params: {} },
   { name: 'get-outlook-contact', params: { contactId: 'c1' } },
   { name: 'search-outlook-contacts', params: { query: 'Alice' } },
@@ -562,7 +550,8 @@ describe('command schema rejection', () => {
     { name: 'download-drive-item-version-content', params: { driveId: 'd1', itemId: 'i1' } },
     { name: 'search-mail-messages', params: {} },
     { name: 'search-my-documents', params: {} },
-    { name: 'search-calendar-events', params: {} },
+    { name: 'get-calendar-view', params: {} },
+    { name: 'list-calendar-view-delta', params: {} },
     { name: 'search-outlook-contacts', params: {} },
     { name: 'search-onenote-pages', params: {} },
     { name: 'search-sharepoint-sites-by-name', params: {} },
@@ -614,7 +603,6 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'get-sharepoint-site', params: { siteId: 's1' }, expectedPath: '/sites/s1' },
   { name: 'list-sharepoint-site-drives', params: { siteId: 's1' }, expectedPath: '/sites/s1/drives' },
   { name: 'get-sharepoint-site-drive-by-id', params: { siteId: 's1', driveId: 'd1' }, expectedPath: '/sites/s1/drives/d1' },
-  { name: 'list-sharepoint-site-items', params: { siteId: 's1' }, expectedPath: '/sites/s1/items' },
   { name: 'get-sharepoint-site-item', params: { siteId: 's1', baseItemId: 'b1' }, expectedPath: '/sites/s1/items/b1' },
   { name: 'list-sharepoint-site-lists', params: { siteId: 's1' }, expectedPath: '/sites/s1/lists' },
   { name: 'get-sharepoint-site-list', params: { siteId: 's1', listId: 'l1' }, expectedPath: '/sites/s1/lists/l1' },
@@ -650,20 +638,27 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-all-onenote-sections', params: {}, expectedPath: '/me/onenote/sections' },
   { name: 'list-onenote-section-pages', params: { onenoteSectionId: 's1' }, expectedPath: '/me/onenote/sections/s1/pages' },
   { name: 'get-onenote-page-content', params: { onenotePageId: 'p1' }, expectedPath: '/me/onenote/pages/p1/content' },
-  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: '/me/onenote/pages?$search=meeting' },
+  { name: 'search-onenote-pages', params: { query: 'meeting' }, expectedPath: '/me/onenote/pages?search=meeting' },
   { name: 'get-current-user', params: {}, expectedPath: '/me' },
   { name: 'get-my-profile-photo', params: {}, expectedPath: '/me/photo/$value' },
   { name: 'list-calendar-events', params: {}, expectedPath: '/me/events' },
   { name: 'get-calendar-event', params: { eventId: 'e1' }, expectedPath: '/me/events/e1' },
   { name: 'list-specific-calendar-events', params: { calendarId: 'c1' }, expectedPath: '/me/calendars/c1/events' },
   { name: 'get-specific-calendar-event', params: { calendarId: 'c1', eventId: 'e1' }, expectedPath: '/me/calendars/c1/events/e1' },
-  { name: 'get-calendar-view', params: {}, expectedPath: '/me/calendarView' },
+  {
+    name: 'get-calendar-view',
+    params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
+    expectedPath: '/me/calendarView?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
+  },
   { name: 'get-specific-calendar-view', params: { calendarId: 'c1' }, expectedPath: '/me/calendars/c1/calendarView' },
   { name: 'list-calendar-event-instances', params: { calendarId: 'c1', eventId: 'e1' }, expectedPath: '/me/calendars/c1/events/e1/instances' },
   { name: 'list-calendars', params: {}, expectedPath: '/me/calendars' },
   { name: 'list-calendar-events-delta', params: {}, expectedPath: '/me/events/delta()' },
-  { name: 'list-calendar-view-delta', params: {}, expectedPath: '/me/calendarView/delta()' },
-  { name: 'search-calendar-events', params: { query: 'review' }, expectedPath: '/me/events?$search="review"' },
+  {
+    name: 'list-calendar-view-delta',
+    params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
+    expectedPath: '/me/calendarView/delta()?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
+  },
   { name: 'list-outlook-contacts', params: {}, expectedPath: '/me/contacts' },
   { name: 'get-outlook-contact', params: { contactId: 'c1' }, expectedPath: '/me/contacts/c1' },
   { name: 'search-outlook-contacts', params: { query: 'Alice' }, expectedPath: '/me/contacts?$search="Alice"' },

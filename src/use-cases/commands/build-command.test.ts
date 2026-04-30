@@ -4,7 +4,7 @@ import { ok } from '../../domain/result.ts';
 import type { GraphClient } from '../../infra/graph-client.ts';
 import { buildCommand } from './build-command.ts';
 
-const fakeGraph: GraphClient = { get: async () => ok({}), post: async () => ok({}) };
+const fakeGraph: GraphClient = { get: async () => ok({}), post: async () => ok({}), getBinary: async () => ok({}) };
 
 describe('buildCommand', () => {
   it('throws with descriptive message when schema validation fails', async () => {
@@ -20,6 +20,7 @@ describe('buildCommand', () => {
         return ok({});
       },
       post: async () => ok({}),
+      getBinary: async () => ok({}),
     };
     const cmd = buildCommand((p) => `/items/${p.id}`, z.object({ id: z.string() }));
     const result = await cmd.execute(graph, { id: '42' });
