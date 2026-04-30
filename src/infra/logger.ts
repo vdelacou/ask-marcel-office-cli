@@ -19,8 +19,12 @@ export type WinstonLoggerConfig = {
 export const createWinstonLogger = (config: WinstonLoggerConfig = {}): Logger => {
   const winston = createLogger({
     // Default to `error` so stdout stays clean for piping. Override with
-    // LOG_LEVEL=info (or debug) for verbose troubleshooting output.
-    level: config.logLevel ?? process.env.LOG_LEVEL ?? 'error',
+    // `ASKMARCEL_LOG_LEVEL=info` (or `debug`) for verbose troubleshooting.
+    // We deliberately do NOT honour the generic `LOG_LEVEL` env var, which
+    // is a shared convention that other tools may have already exported in
+    // the user's shell — leaking that setting into our CLI would surprise
+    // the user with verbose output they did not ask for.
+    level: config.logLevel ?? process.env.ASKMARCEL_LOG_LEVEL ?? 'error',
     format: format.combine(redactFormat(), format.json()),
     // Route ALL log levels to stderr so stdout is reserved for the
     // command's actual JSON output (LLM-friendly piping).

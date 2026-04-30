@@ -53,8 +53,8 @@ describe('winston logger adapter', () => {
   });
 
   it('defaults to error level (silencing info events) when no config or env var is given', async () => {
-    const previous = process.env.LOG_LEVEL;
-    delete process.env.LOG_LEVEL;
+    const previous = process.env.ASKMARCEL_LOG_LEVEL;
+    delete process.env.ASKMARCEL_LOG_LEVEL;
     try {
       const logger = createWinstonLogger();
       const out = await captureStream('stderr', () => {
@@ -64,21 +64,21 @@ describe('winston logger adapter', () => {
       expect(out).not.toContain('this_should_be_silent');
       expect(out).toContain('this_should_appear');
     } finally {
-      if (previous === undefined) delete process.env.LOG_LEVEL;
-      else process.env.LOG_LEVEL = previous;
+      if (previous === undefined) delete process.env.ASKMARCEL_LOG_LEVEL;
+      else process.env.ASKMARCEL_LOG_LEVEL = previous;
     }
   });
 
-  it('honours LOG_LEVEL env var when no config logLevel is provided', async () => {
-    const previous = process.env.LOG_LEVEL;
-    process.env.LOG_LEVEL = 'info';
+  it('honours ASKMARCEL_LOG_LEVEL env var when no config logLevel is provided', async () => {
+    const previous = process.env.ASKMARCEL_LOG_LEVEL;
+    process.env.ASKMARCEL_LOG_LEVEL = 'info';
     try {
       const logger = createWinstonLogger();
       const out = await captureStream('stderr', () => logger.info('env_driven_event'));
       expect(out).toContain('env_driven_event');
     } finally {
-      if (previous === undefined) delete process.env.LOG_LEVEL;
-      else process.env.LOG_LEVEL = previous;
+      if (previous === undefined) delete process.env.ASKMARCEL_LOG_LEVEL;
+      else process.env.ASKMARCEL_LOG_LEVEL = previous;
     }
   });
 });

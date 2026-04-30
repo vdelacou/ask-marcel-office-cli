@@ -20,14 +20,14 @@ describe('buildDeps composition root', () => {
   });
 
   it('uses default config values when no config is provided', () => {
-    const previousLevel = process.env.LOG_LEVEL;
-    process.env.LOG_LEVEL = 'error';
+    const previousLevel = process.env.ASKMARCEL_LOG_LEVEL;
+    process.env.ASKMARCEL_LOG_LEVEL = 'error';
     try {
       const deps = buildDeps();
       expect(typeof deps.logger.info).toBe('function');
     } finally {
-      if (previousLevel === undefined) delete process.env.LOG_LEVEL;
-      else process.env.LOG_LEVEL = previousLevel;
+      if (previousLevel === undefined) delete process.env.ASKMARCEL_LOG_LEVEL;
+      else process.env.ASKMARCEL_LOG_LEVEL = previousLevel;
     }
   });
 

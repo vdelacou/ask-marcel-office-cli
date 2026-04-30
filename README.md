@@ -245,7 +245,7 @@ Environment variables read at composition time:
 
 | Variable | Used by | Default |
 |---|---|---|
-| `LOG_LEVEL` | Winston logger; all output goes to **stderr** (stdout reserved for command JSON) | `error` (use `info` or `debug` for troubleshooting) |
+| `ASKMARCEL_LOG_LEVEL` | Winston logger; all output goes to **stderr** (stdout reserved for command JSON). Namespaced so a generic `LOG_LEVEL` exported by another tool in your shell does not leak into ours. | `error` (use `info` or `debug` for troubleshooting) |
 | `HOME` / `USERPROFILE` | Default cache and browser-profile paths | _(required)_ |
 | `ASKMARCEL_BROWSER_PROFILE` | Override Playwright user-data-dir | _(none)_ |
 
