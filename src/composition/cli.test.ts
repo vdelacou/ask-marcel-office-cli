@@ -149,4 +149,35 @@ describe('buildCli command surface', () => {
       process.argv[1] = previousArgv;
     }
   });
+
+  it('prints the full JSON manifest when the user runs `docs --json`', async () => {
+    const logger = createLoggerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
+    const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'docs', '--json']));
+    expect(out).toContain('"package":"ask-marcel-office-cli"');
+    expect(out).toContain('"name":"get-current-user"');
+  });
+
+  it('prints Markdown for a single command when the user runs `docs <cmd>`', async () => {
+    const logger = createLoggerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
+    const out = await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel', 'docs', 'get-current-user']));
+    expect(out).toContain('# `get-current-user`');
+    expect(out).toContain('## Example');
+  });
+
+  it('renders an unknown-command message when the user runs `docs` with a name that does not exist', async () => {
+    const logger = createLoggerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
+    const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'docs', 'this-is-not-a-real-command']));
+    expect(out).toContain('Unknown command');
+    expect(out).toContain('this-is-not-a-real-command');
+  });
+
+  it('prompts the user when `docs` is run without a command name and without `--json`', async () => {
+    const logger = createLoggerFake();
+    const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake() });
+    const out = await captureStream('stderr', () => cli.parseAsync(['node', 'ask-marcel', 'docs']));
+    expect(out).toContain('Provide a command name');
+  });
 });

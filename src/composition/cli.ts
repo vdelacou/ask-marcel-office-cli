@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import type { AuthManager } from '../infra/auth.ts';
 import type { GraphClient } from '../infra/graph-client.ts';
 import { render, renderError } from '../presenter/output.ts';
+import { buildManifest, renderSingleCommand } from '../use-cases/commands/docs.ts';
+import { CATEGORY_LABELS, CATEGORY_ORDER } from '../use-cases/commands/docs-render.ts';
 import { commands as cmdRegistry } from '../use-cases/commands/index.ts';
 import * as login from '../use-cases/commands/login.ts';
 import * as logout from '../use-cases/commands/logout.ts';
@@ -19,6 +21,8 @@ type BuildCliDeps = {
   readonly packageManager?: 'npm' | 'bun';
 };
 
+const PACKAGE_NAME = 'ask-marcel-office-cli';
+
 const buildCli = (deps: BuildCliDeps): Command => {
   const { auth, graph, logger, processRunner, version } = deps;
   const program = new Command();
@@ -27,6 +31,8 @@ const buildCli = (deps: BuildCliDeps): Command => {
     .name('ask-marcel')
     .description('Microsoft Graph CLI')
     .version(version ?? '0.0.0');
+
+  program.commandsGroup('Lifecycle:');
 
   program
     .command('login')
@@ -48,7 +54,7 @@ const buildCli = (deps: BuildCliDeps): Command => {
 
   program
     .command('update')
-    .description('Update ask-marcel to the latest version on npm')
+    .description('Update ask-marcel to the latest version on npm (auto-detects npm vs bun)')
     .action(async () => {
       const manager = deps.packageManager ?? detectPackageManager(process.argv[1] ?? '');
       const result = await update.execute(processRunner, manager);
@@ -57,16 +63,45 @@ const buildCli = (deps: BuildCliDeps): Command => {
       else renderError(`update install exited with code ${result.error.exitCode}`, logger);
     });
 
-  for (const [name, cmd] of Object.entries(cmdRegistry)) {
-    const commandDef = program.command(name).description(cmd.meta.summary);
-    for (const opt of cmd.meta.options) commandDef.requiredOption(`--${opt.name} <value>`, opt.description);
-    const lines = [`\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`, `Microsoft Learn: ${cmd.meta.graphDocsUrl}`, `\nExample:\n  ${cmd.meta.example}`];
-    commandDef.addHelpText('after', lines.join('\n'));
-    commandDef.action(async (opts: Record<string, string>) => {
-      const result = await cmd.execute(graph, opts);
-      if (result.ok) render(result.value, logger);
-      else renderError(result.error.message, logger);
+  program
+    .command('docs')
+    .description('Print Markdown docs for a single command, or `--json` for the full manifest')
+    .argument('[command]', 'Command name to show docs for (omit when using --json)')
+    .option('--json', 'Print the full machine-readable JSON manifest of every command')
+    .action((commandName: string | undefined, options: { json?: boolean }) => {
+      if (options.json) {
+        const manifest = buildManifest(cmdRegistry, PACKAGE_NAME, version ?? '0.0.0');
+        render(manifest, logger);
+        return;
+      }
+      if (!commandName) {
+        renderError('Provide a command name (e.g. `ask-marcel docs get-current-user`) or use `--json` for the full manifest.', logger);
+        return;
+      }
+      const result = renderSingleCommand(cmdRegistry, commandName);
+      if (result.ok) process.stdout.write(`${result.value}\n`);
+      else renderError(`Unknown command "${result.error.name}". Run \`ask-marcel --help\` to list every command.`, logger);
     });
+
+  for (const category of CATEGORY_ORDER) {
+    const entries = Object.entries(cmdRegistry).filter(([, c]) => c.meta.category === category);
+    if (entries.length === 0) continue;
+    program.commandsGroup(`${CATEGORY_LABELS[category]}:`);
+    for (const [name, cmd] of entries) {
+      const commandDef = program.command(name).description(cmd.meta.summary);
+      for (const opt of cmd.meta.options) commandDef.requiredOption(`--${opt.name} <value>`, opt.description);
+      const helpLines = [
+        `\nGraph endpoint: ${cmd.meta.graphMethod} ${cmd.meta.graphPathTemplate}`,
+        `Microsoft Learn: ${cmd.meta.graphDocsUrl}`,
+        `\nExample:\n  ${cmd.meta.example}`,
+      ];
+      commandDef.addHelpText('after', helpLines.join('\n'));
+      commandDef.action(async (opts: Record<string, string>) => {
+        const result = await cmd.execute(graph, opts);
+        if (result.ok) render(result.value, logger);
+        else renderError(result.error.message, logger);
+      });
+    }
   }
 
   return program;
