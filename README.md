@@ -51,7 +51,6 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `get-sharepoint-site-item` | Get a single baseItem (page, root-level item, etc.) on a SharePoint site by ID. | `--site-id`, `--base-item-id` | `GET /sites/{site-id}/items/{base-item-id}` |
 | `get-sharepoint-site-list` | Get the metadata (display name, template, columns) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}` |
 | `get-sharepoint-site-list-item` | Get a single row (listItem) of a SharePoint list by ID. | `--site-id`, `--list-id`, `--list-item-id` | `GET /sites/{site-id}/lists/{list-id}/items/{list-item-id}` |
-| `get-sharepoint-sites-delta` | Get the incremental change set of SharePoint sites in the tenant. Use the `@odata.deltaLink` from a previous response to resume. | _(none)_ | `GET /sites/delta()` |
 | `list-sharepoint-site-drives` | List the document libraries (drives) attached to a SharePoint site. | `--site-id` | `GET /sites/{site-id}/drives` |
 | `list-sharepoint-site-list-items` | List the rows (listItem resources) of a single SharePoint list. | `--site-id`, `--list-id` | `GET /sites/{site-id}/lists/{list-id}/items` |
 | `list-sharepoint-site-lists` | List all SharePoint lists (custom + built-in document libraries) on a site. | `--site-id` | `GET /sites/{site-id}/lists` |
@@ -124,45 +123,20 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-calendars` | List the calendars in the signed-in user’s mailbox (default + secondary calendars + shared calendars). | _(none)_ | `GET /me/calendars` |
 | `list-specific-calendar-events` | List the events in a specific (non-default) calendar (does not expand recurrences). | `--calendar-id` | `GET /me/calendars/{calendar-id}/events` |
 
-### Contacts
-
-| Command | Description | Required params | Graph endpoint |
-|---------|-------------|-----------------|----------------|
-| `get-outlook-contact` | Get a single personal Outlook contact by its ID. | `--contact-id` | `GET /me/contacts/{contact-id}` |
-| `list-outlook-contacts` | List the personal Outlook contacts in the signed-in user’s default contacts folder. | _(none)_ | `GET /me/contacts` |
-| `search-outlook-contacts` | Search the signed-in user’s Outlook contacts using KQL or free text. Matches name, email, company, and phone fields. | `--query` | `GET /me/contacts?$search="{query}"` |
-
 ### Chats
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
-| `get-chat` | Get the metadata of a single Microsoft Teams chat (topic, type, members count, last update). | `--chat-id` | `GET /chats/{chat-id}` |
-| `get-chat-message` | Get a single message in a Microsoft Teams chat by its ID. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}` |
-| `get-chat-message-hosted-content` | Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams chat message. | `--chat-id`, `--chat-message-id`, `--chat-message-hosted-content-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value` |
 | `list-chat-members` | List the members of a single Microsoft Teams chat. | `--chat-id` | `GET /chats/{chat-id}/members` |
-| `list-chat-message-hosted-contents` | List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams chat message. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/hostedContents` |
-| `list-chat-message-replies` | List the replies in a Microsoft Teams chat message thread. | `--chat-id`, `--chat-message-id` | `GET /chats/{chat-id}/messages/{chat-message-id}/replies` |
-| `list-chat-messages` | List the messages in a single Microsoft Teams chat thread (1:1, group, or meeting chat). | `--chat-id` | `GET /chats/{chat-id}/messages` |
-| `list-chats` | List the Microsoft Teams chats (1:1, group, meeting) the signed-in user is a member of. | _(none)_ | `GET /me/chats` |
-| `list-pinned-chat-messages` | List the pinned messages in a Microsoft Teams chat. | `--chat-id` | `GET /chats/{chat-id}/pinnedMessages` |
 
 ### Teams
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
-| `get-channel-files-folder` | Get the SharePoint files folder (driveItem) backing a Microsoft Teams channel’s `Files` tab. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/filesFolder` |
-| `get-channel-message` | Get a single root message in a Microsoft Teams channel by ID. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}` |
-| `get-channel-message-hosted-content` | Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams channel message. | `--team-id`, `--channel-id`, `--chat-message-id`, `--chat-message-hosted-content-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value` |
 | `get-team` | Get the metadata of a single Microsoft Team (display name, settings, member-settings, owner group). | `--team-id` | `GET /teams/{team-id}` |
 | `get-team-channel` | Get the metadata of a single channel inside a Microsoft Team. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}` |
-| `list-channel-message-hosted-contents` | List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams channel message. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents` |
-| `list-channel-message-replies` | List the replies in a Microsoft Teams channel message thread. | `--team-id`, `--channel-id`, `--chat-message-id` | `GET /teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/replies` |
-| `list-channel-messages` | List the root messages in a Microsoft Teams channel. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/messages` |
-| `list-channel-tabs` | List the pinned tabs (Wiki, Planner, Website, custom apps) of a Microsoft Teams channel. | `--team-id`, `--channel-id` | `GET /teams/{team-id}/channels/{channel-id}/tabs` |
 | `list-joined-teams` | List the Microsoft Teams the signed-in user is a member of. | _(none)_ | `GET /me/joinedTeams` |
 | `list-team-channels` | List the channels (standard, private, shared) inside a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/channels` |
-| `list-team-members` | List the members of a single Microsoft Team. | `--team-id` | `GET /teams/{team-id}/members` |
-| `search-graph-messages` | Search Microsoft Teams channel messages and 1:1 / group chat messages with a free-text or KQL query (Microsoft Search API). | `--query` | `POST /search/query` |
 
 ### Meta / Pagination
 

@@ -9,12 +9,6 @@ import * as downloadDriveItemVersionContent from './download-drive-item-version-
 import * as downloadOnedriveFileContent from './download-onedrive-file-content.ts';
 import * as getCalendarEvent from './get-calendar-event.ts';
 import * as getCalendarView from './get-calendar-view.ts';
-import * as getChannelFilesFolder from './get-channel-files-folder.ts';
-import * as getChannelMessageHostedContent from './get-channel-message-hosted-content.ts';
-import * as getChannelMessage from './get-channel-message.ts';
-import * as getChatMessageHostedContent from './get-chat-message-hosted-content.ts';
-import * as getChatMessage from './get-chat-message.ts';
-import * as getChat from './get-chat.ts';
 import * as getCurrentUser from './get-current-user.ts';
 import * as getDriveDelta from './get-drive-delta.ts';
 import * as getDriveItem from './get-drive-item.ts';
@@ -26,7 +20,6 @@ import * as getMailMessage from './get-mail-message.ts';
 import * as getMailboxSettings from './get-mailbox-settings.ts';
 import * as getMyProfilePhoto from './get-my-profile-photo.ts';
 import * as getOnenotePageContent from './get-onenote-page-content.ts';
-import * as getOutlookContact from './get-outlook-contact.ts';
 import * as getPlannerBucket from './get-planner-bucket.ts';
 import * as getPlannerPlan from './get-planner-plan.ts';
 import * as getPlannerTaskDetails from './get-planner-task-details.ts';
@@ -37,7 +30,6 @@ import * as getSharepointSiteItem from './get-sharepoint-site-item.ts';
 import * as getSharepointSiteListItem from './get-sharepoint-site-list-item.ts';
 import * as getSharepointSiteList from './get-sharepoint-site-list.ts';
 import * as getSharepointSite from './get-sharepoint-site.ts';
-import * as getSharepointSitesDelta from './get-sharepoint-sites-delta.ts';
 import * as getSpecificCalendarEvent from './get-specific-calendar-event.ts';
 import * as getSpecificCalendarView from './get-specific-calendar-view.ts';
 import * as getTeamChannel from './get-team-channel.ts';
@@ -49,24 +41,16 @@ import * as listCalendarEventsDelta from './list-calendar-events-delta.ts';
 import * as listCalendarEvents from './list-calendar-events.ts';
 import * as listCalendarViewDelta from './list-calendar-view-delta.ts';
 import * as listCalendars from './list-calendars.ts';
-import * as listChannelMessageHostedContents from './list-channel-message-hosted-contents.ts';
-import * as listChannelMessageReplies from './list-channel-message-replies.ts';
-import * as listChannelMessages from './list-channel-messages.ts';
-import * as listChannelTabs from './list-channel-tabs.ts';
 import * as listChatMembers from './list-chat-members.ts';
-import * as listChatMessageHostedContents from './list-chat-message-hosted-contents.ts';
-import * as listChatMessageReplies from './list-chat-message-replies.ts';
-import * as listChatMessages from './list-chat-messages.ts';
-import * as listChats from './list-chats.ts';
 import * as listDriveItemPermissions from './list-drive-item-permissions.ts';
 import * as listDriveItemVersions from './list-drive-item-versions.ts';
 import * as listDrives from './list-drives.ts';
 import * as listExcelTableRows from './list-excel-table-rows.ts';
-import * as listIncompletePlannerTasks from './list-incomplete-planner-tasks.ts';
-import * as listIncompleteTodoTasks from './list-incomplete-todo-tasks.ts';
 import * as listExcelTables from './list-excel-tables.ts';
 import * as listExcelWorksheets from './list-excel-worksheets.ts';
 import * as listFolderFiles from './list-folder-files.ts';
+import * as listIncompletePlannerTasks from './list-incomplete-planner-tasks.ts';
+import * as listIncompleteTodoTasks from './list-incomplete-todo-tasks.ts';
 import * as listJoinedTeams from './list-joined-teams.ts';
 import * as listMailAttachments from './list-mail-attachments.ts';
 import * as listMailChildFolders from './list-mail-child-folders.ts';
@@ -77,8 +61,6 @@ import * as listMailRules from './list-mail-rules.ts';
 import * as listOnenoteNotebookSections from './list-onenote-notebook-sections.ts';
 import * as listOnenoteNotebooks from './list-onenote-notebooks.ts';
 import * as listOnenoteSectionPages from './list-onenote-section-pages.ts';
-import * as listOutlookContacts from './list-outlook-contacts.ts';
-import * as listPinnedChatMessages from './list-pinned-chat-messages.ts';
 import * as listPlanBuckets from './list-plan-buckets.ts';
 import * as listPlanTasks from './list-plan-tasks.ts';
 import * as listPlannerTasks from './list-planner-tasks.ts';
@@ -87,17 +69,14 @@ import * as listSharepointSiteListItems from './list-sharepoint-site-list-items.
 import * as listSharepointSiteLists from './list-sharepoint-site-lists.ts';
 import * as listSpecificCalendarEvents from './list-specific-calendar-events.ts';
 import * as listTeamChannels from './list-team-channels.ts';
-import * as listTeamMembers from './list-team-members.ts';
 import * as listTodoLinkedResources from './list-todo-linked-resources.ts';
 import * as listTodoTaskLists from './list-todo-task-lists.ts';
 import * as listTodoTasks from './list-todo-tasks.ts';
 import * as nextPage from './next-page.ts';
-import * as searchGraphMessages from './search-graph-messages.ts';
 import * as searchMailMessages from './search-mail-messages.ts';
 import * as searchMyDocuments from './search-my-documents.ts';
 import * as searchOnedriveFiles from './search-onedrive-files.ts';
 import * as searchOnenotePages from './search-onenote-pages.ts';
-import * as searchOutlookContacts from './search-outlook-contacts.ts';
 import * as searchSharepointSitesByName from './search-sharepoint-sites-by-name.ts';
 import * as searchSharepointSites from './search-sharepoint-sites.ts';
 
@@ -129,7 +108,6 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-sharepoint-site-list-items': listSharepointSiteListItems,
   'get-sharepoint-site-list-item': getSharepointSiteListItem,
   'get-sharepoint-site-by-path': getSharepointSiteByPath,
-  'get-sharepoint-sites-delta': getSharepointSitesDelta,
   'list-todo-task-lists': listTodoTaskLists,
   'list-todo-tasks': listTodoTasks,
   'list-incomplete-todo-tasks': listIncompleteTodoTasks,
@@ -171,31 +149,11 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-calendars': listCalendars,
   'list-calendar-events-delta': listCalendarEventsDelta,
   'list-calendar-view-delta': listCalendarViewDelta,
-  'list-outlook-contacts': listOutlookContacts,
-  'get-outlook-contact': getOutlookContact,
-  'search-outlook-contacts': searchOutlookContacts,
-  'list-chats': listChats,
-  'get-chat': getChat,
   'list-chat-members': listChatMembers,
-  'list-chat-messages': listChatMessages,
-  'get-chat-message': getChatMessage,
-  'list-chat-message-hosted-contents': listChatMessageHostedContents,
-  'get-chat-message-hosted-content': getChatMessageHostedContent,
-  'list-chat-message-replies': listChatMessageReplies,
-  'list-pinned-chat-messages': listPinnedChatMessages,
   'list-joined-teams': listJoinedTeams,
   'get-team': getTeam,
   'list-team-channels': listTeamChannels,
   'get-team-channel': getTeamChannel,
-  'list-channel-messages': listChannelMessages,
-  'get-channel-message': getChannelMessage,
-  'list-channel-message-hosted-contents': listChannelMessageHostedContents,
-  'get-channel-message-hosted-content': getChannelMessageHostedContent,
-  'list-channel-message-replies': listChannelMessageReplies,
-  'list-channel-tabs': listChannelTabs,
-  'list-team-members': listTeamMembers,
-  'get-channel-files-folder': getChannelFilesFolder,
-  'search-graph-messages': searchGraphMessages,
   'next-page': nextPage,
 };
 
@@ -276,12 +234,6 @@ describe('commands', () => {
     if (result.ok) expect(result.value).toEqual({ value: [{ subject: 'invoice 042' }] });
   });
 
-  it('search-outlook-contacts searches contacts with $search', async () => {
-    const result = await callCommand('search-outlook-contacts', { query: 'Alice' }, { value: [{ displayName: 'Alice Doe' }] });
-    expect(result.ok).toBe(true);
-    if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Alice Doe' }] });
-  });
-
   it('search-onenote-pages searches OneNote pages with the OneNote `?search=` query parameter (no leading $)', async () => {
     const result = await callCommand('search-onenote-pages', { query: 'meeting notes' }, { value: [{ title: 'Meeting notes 2026-04-30' }] });
     expect(result.ok).toBe(true);
@@ -322,22 +274,6 @@ describe('commands', () => {
       throw new Error('should have rejected');
     } catch (e) {
       expect((e as Error).message).toContain('validation failed:');
-    }
-  });
-
-  it('search-graph-messages POSTs a Microsoft Search query with chatMessage entityType and the user-supplied query string', async () => {
-    const cmd = cmdMap['search-graph-messages'];
-    if (!cmd) throw new Error('search-graph-messages not registered');
-    const fetchFn = fakeFetch({ value: [{ hitsContainers: [{ hits: [{ rank: 1 }] }] }] });
-    const graph = createGraphClient(fakeAuth(), fetchFn);
-    const result = await cmd.execute(graph, { query: 'quarterly review' });
-    expect(result.ok).toBe(true);
-    expect(fetchFn.lastUrl).toBe('https://graph.microsoft.com/v1.0/search/query');
-    expect(fetchFn.lastBody).not.toBeNull();
-    if (fetchFn.lastBody !== null) {
-      const parsed = JSON.parse(fetchFn.lastBody) as { requests: Array<{ entityTypes: string[]; query: { queryString: string } }> };
-      expect(parsed.requests[0]?.entityTypes).toEqual(['chatMessage']);
-      expect(parsed.requests[0]?.query.queryString).toBe('quarterly review');
     }
   });
 
@@ -451,7 +387,6 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-sharepoint-site-list-items', params: { siteId: 's1', listId: 'l1' } },
   { name: 'get-sharepoint-site-list-item', params: { siteId: 's1', listId: 'l1', listItemId: 'li1' } },
   { name: 'get-sharepoint-site-by-path', params: { siteId: 's1', path: '/sites/docs' } },
-  { name: 'get-sharepoint-sites-delta', params: {} },
   { name: 'list-todo-task-lists', params: {} },
   { name: 'list-todo-tasks', params: { todoTaskListId: 'tl1' } },
   { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' } },
@@ -493,31 +428,11 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-calendars', params: {} },
   { name: 'list-calendar-events-delta', params: {} },
   { name: 'list-calendar-view-delta', params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' } },
-  { name: 'list-outlook-contacts', params: {} },
-  { name: 'get-outlook-contact', params: { contactId: 'c1' } },
-  { name: 'search-outlook-contacts', params: { query: 'Alice' } },
-  { name: 'list-chats', params: {} },
-  { name: 'get-chat', params: { chatId: 'ch1' } },
   { name: 'list-chat-members', params: { chatId: 'ch1' } },
-  { name: 'list-chat-messages', params: { chatId: 'ch1' } },
-  { name: 'get-chat-message', params: { chatId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'list-chat-message-hosted-contents', params: { chatId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'get-chat-message-hosted-content', params: { chatId: 'ch1', chatMessageId: 'msg1', chatMessageHostedContentId: 'hc1' } },
-  { name: 'list-chat-message-replies', params: { chatId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'list-pinned-chat-messages', params: { chatId: 'ch1' } },
   { name: 'list-joined-teams', params: {} },
   { name: 'get-team', params: { teamId: 'tm1' } },
   { name: 'list-team-channels', params: { teamId: 'tm1' } },
   { name: 'get-team-channel', params: { teamId: 'tm1', channelId: 'ch1' } },
-  { name: 'list-channel-messages', params: { teamId: 'tm1', channelId: 'ch1' } },
-  { name: 'get-channel-message', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'list-channel-message-hosted-contents', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'get-channel-message-hosted-content', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1', chatMessageHostedContentId: 'hc1' } },
-  { name: 'list-channel-message-replies', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' } },
-  { name: 'list-channel-tabs', params: { teamId: 'tm1', channelId: 'ch1' } },
-  { name: 'list-team-members', params: { teamId: 'tm1' } },
-  { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' } },
-  { name: 'search-graph-messages', params: { query: 'standup' } },
   { name: 'next-page', params: { url: 'https://graph.microsoft.com/v1.0/me/messages?$skip=10' } },
 ];
 
@@ -540,10 +455,6 @@ describe('command schema rejection', () => {
     { name: 'get-onenote-page-content', params: {} },
     { name: 'get-calendar-event', params: {} },
     { name: 'get-specific-calendar-event', params: { calendarId: 'c1' } },
-    { name: 'get-outlook-contact', params: {} },
-    { name: 'get-chat', params: {} },
-    { name: 'get-chat-message', params: { chatId: 'ch1' } },
-    { name: 'get-channel-message-hosted-content', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' } },
     { name: 'list-team-channels', params: {} },
     { name: 'get-team-channel', params: { teamId: 'tm1' } },
     { name: 'download-onedrive-file-content', params: { driveId: 'd1' } },
@@ -552,10 +463,8 @@ describe('command schema rejection', () => {
     { name: 'search-my-documents', params: {} },
     { name: 'get-calendar-view', params: {} },
     { name: 'list-calendar-view-delta', params: {} },
-    { name: 'search-outlook-contacts', params: {} },
     { name: 'search-onenote-pages', params: {} },
     { name: 'search-sharepoint-sites-by-name', params: {} },
-    { name: 'search-graph-messages', params: {} },
     { name: 'list-incomplete-todo-tasks', params: {} },
     { name: 'next-page', params: {} },
     { name: 'next-page', params: { url: 'https://example.com/foo' } },
@@ -609,7 +518,6 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-sharepoint-site-list-items', params: { siteId: 's1', listId: 'l1' }, expectedPath: '/sites/s1/lists/l1/items' },
   { name: 'get-sharepoint-site-list-item', params: { siteId: 's1', listId: 'l1', listItemId: 'li1' }, expectedPath: '/sites/s1/lists/l1/items/li1' },
   { name: 'get-sharepoint-site-by-path', params: { siteId: 's1', path: '/sites/docs' }, expectedPath: "/sites/s1/getByPath(path='/sites/docs')" },
-  { name: 'get-sharepoint-sites-delta', params: {}, expectedPath: '/sites/delta()' },
   { name: 'list-todo-task-lists', params: {}, expectedPath: '/me/todo/lists' },
   { name: 'list-todo-tasks', params: { todoTaskListId: 'tl1' }, expectedPath: '/me/todo/lists/tl1/tasks' },
   { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' }, expectedPath: "/me/todo/lists/tl1/tasks?$filter=status ne 'completed'" },
@@ -659,43 +567,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
     params: { startDateTime: '2026-04-01T00:00:00Z', endDateTime: '2026-05-01T00:00:00Z' },
     expectedPath: '/me/calendarView/delta()?startDateTime=2026-04-01T00:00:00Z&endDateTime=2026-05-01T00:00:00Z',
   },
-  { name: 'list-outlook-contacts', params: {}, expectedPath: '/me/contacts' },
-  { name: 'get-outlook-contact', params: { contactId: 'c1' }, expectedPath: '/me/contacts/c1' },
-  { name: 'search-outlook-contacts', params: { query: 'Alice' }, expectedPath: '/me/contacts?$search="Alice"' },
-  { name: 'list-chats', params: {}, expectedPath: '/me/chats' },
-  { name: 'get-chat', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1' },
   { name: 'list-chat-members', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1/members' },
-  { name: 'list-chat-messages', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1/messages' },
-  { name: 'get-chat-message', params: { chatId: 'ch1', chatMessageId: 'msg1' }, expectedPath: '/chats/ch1/messages/msg1' },
-  { name: 'list-chat-message-hosted-contents', params: { chatId: 'ch1', chatMessageId: 'msg1' }, expectedPath: '/chats/ch1/messages/msg1/hostedContents' },
-  {
-    name: 'get-chat-message-hosted-content',
-    params: { chatId: 'ch1', chatMessageId: 'msg1', chatMessageHostedContentId: 'hc1' },
-    expectedPath: '/chats/ch1/messages/msg1/hostedContents/hc1/$value',
-  },
-  { name: 'list-chat-message-replies', params: { chatId: 'ch1', chatMessageId: 'msg1' }, expectedPath: '/chats/ch1/messages/msg1/replies' },
-  { name: 'list-pinned-chat-messages', params: { chatId: 'ch1' }, expectedPath: '/chats/ch1/pinnedMessages' },
   { name: 'list-joined-teams', params: {}, expectedPath: '/me/joinedTeams' },
   { name: 'get-team', params: { teamId: 'tm1' }, expectedPath: '/teams/tm1' },
   { name: 'list-team-channels', params: { teamId: 'tm1' }, expectedPath: '/teams/tm1/channels' },
   { name: 'get-team-channel', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1' },
-  { name: 'list-channel-messages', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/messages' },
-  { name: 'get-channel-message', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' }, expectedPath: '/teams/tm1/channels/ch1/messages/msg1' },
-  {
-    name: 'list-channel-message-hosted-contents',
-    params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' },
-    expectedPath: '/teams/tm1/channels/ch1/messages/msg1/hostedContents',
-  },
-  {
-    name: 'get-channel-message-hosted-content',
-    params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1', chatMessageHostedContentId: 'hc1' },
-    expectedPath: '/teams/tm1/channels/ch1/messages/msg1/hostedContents/hc1/$value',
-  },
-  { name: 'list-channel-message-replies', params: { teamId: 'tm1', channelId: 'ch1', chatMessageId: 'msg1' }, expectedPath: '/teams/tm1/channels/ch1/messages/msg1/replies' },
-  { name: 'list-channel-tabs', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/tabs' },
-  { name: 'list-team-members', params: { teamId: 'tm1' }, expectedPath: '/teams/tm1/members' },
-  { name: 'get-channel-files-folder', params: { teamId: 'tm1', channelId: 'ch1' }, expectedPath: '/teams/tm1/channels/ch1/filesFolder' },
-  { name: 'search-graph-messages', params: { query: 'standup' }, expectedPath: '/search/query' },
   {
     name: 'next-page',
     params: { url: 'https://graph.microsoft.com/v1.0/me/messages?$skip=10' },

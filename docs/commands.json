@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.4.0",
-  "generatedAt": "2026-04-30T07:38:36.694Z",
+  "version": "0.5.0",
+  "generatedAt": "2026-04-30T07:54:36.455Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
@@ -98,168 +98,6 @@
       ],
       "example": "ask-marcel get-calendar-view --start-date-time '2026-04-01T00:00:00Z' --end-date-time '2026-05-01T00:00:00Z'",
       "responseShape": "collection of Microsoft Graph `event` resources (single occurrences) under `value[]`"
-    },
-    {
-      "name": "get-channel-files-folder",
-      "summary": "Get the SharePoint files folder (driveItem) backing a Microsoft Teams channel’s `Files` tab.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/filesFolder",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-get-filesfolder",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        }
-      ],
-      "example": "ask-marcel get-channel-files-folder --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
-      "responseShape": "single Microsoft Graph `driveItem` resource (the channel’s files folder)"
-    },
-    {
-      "name": "get-channel-message",
-      "summary": "Get a single root message in a Microsoft Teams channel by ID.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-get",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
-        }
-      ],
-      "example": "ask-marcel get-channel-message --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
-      "responseShape": "single Microsoft Graph `chatMessage` resource"
-    },
-    {
-      "name": "get-channel-message-hosted-content",
-      "summary": "Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams channel message.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessagehostedcontent-get",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
-        },
-        {
-          "name": "chat-message-hosted-content-id",
-          "key": "chatMessageHostedContentId",
-          "required": true,
-          "description": "Hosted-content ID. Returned by `ask-marcel list-channel-message-hosted-contents`."
-        }
-      ],
-      "example": "ask-marcel get-channel-message-hosted-content --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123' --chat-message-hosted-content-id 'aWQ9...'",
-      "responseShape": "binary content (image / GIF / file bytes)"
-    },
-    {
-      "name": "get-chat",
-      "summary": "Get the metadata of a single Microsoft Teams chat (topic, type, members count, last update).",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-get",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        }
-      ],
-      "example": "ask-marcel get-chat --chat-id '19:abc...@thread.v2'",
-      "responseShape": "single Microsoft Graph `chat` resource"
-    },
-    {
-      "name": "get-chat-message",
-      "summary": "Get a single message in a Microsoft Teams chat by its ID.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-get",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
-        }
-      ],
-      "example": "ask-marcel get-chat-message --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
-      "responseShape": "single Microsoft Graph `chatMessage` resource"
-    },
-    {
-      "name": "get-chat-message-hosted-content",
-      "summary": "Download the binary bytes of a single inline hosted content (image, GIF, code-snippet) from a Microsoft Teams chat message.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/hostedContents/{chat-message-hosted-content-id}/$value",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessagehostedcontent-get",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
-        },
-        {
-          "name": "chat-message-hosted-content-id",
-          "key": "chatMessageHostedContentId",
-          "required": true,
-          "description": "Hosted-content ID. Returned by `ask-marcel list-chat-message-hosted-contents`."
-        }
-      ],
-      "example": "ask-marcel get-chat-message-hosted-content --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123' --chat-message-hosted-content-id 'aWQ9...'",
-      "responseShape": "binary content (image / GIF / file bytes)"
     },
     {
       "name": "get-current-user",
@@ -487,24 +325,6 @@
       "responseShape": "HTML string (the rendered page body)"
     },
     {
-      "name": "get-outlook-contact",
-      "summary": "Get a single personal Outlook contact by its ID.",
-      "category": "contacts",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/me/contacts/{contact-id}",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/contact-get",
-      "options": [
-        {
-          "name": "contact-id",
-          "key": "contactId",
-          "required": true,
-          "description": "Outlook contact ID. Returned by `ask-marcel list-outlook-contacts`."
-        }
-      ],
-      "example": "ask-marcel get-outlook-contact --contact-id 'AAMkAGI2...'",
-      "responseShape": "single Microsoft Graph `contact` resource"
-    },
-    {
       "name": "get-planner-bucket",
       "summary": "Get the metadata of a single Microsoft Planner bucket (column / lane).",
       "category": "tasks",
@@ -721,17 +541,6 @@
       "responseShape": "single Microsoft Graph `listItem` resource"
     },
     {
-      "name": "get-sharepoint-sites-delta",
-      "summary": "Get the incremental change set of SharePoint sites in the tenant. Use the `@odata.deltaLink` from a previous response to resume.",
-      "category": "sharepoint",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/sites/delta()",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/site-delta",
-      "options": [],
-      "example": "ask-marcel get-sharepoint-sites-delta",
-      "responseShape": "collection of changed Microsoft Graph `site` resources under `value[]` plus an `@odata.deltaLink` token"
-    },
-    {
       "name": "get-specific-calendar-event",
       "summary": "Fetch a single calendar event by ID from a specific (non-default) calendar.",
       "category": "calendar",
@@ -932,114 +741,6 @@
       "responseShape": "collection of Microsoft Graph `calendar` resources under `value[]`"
     },
     {
-      "name": "list-channel-message-hosted-contents",
-      "summary": "List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams channel message.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/hostedContents",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-hostedcontents",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-channel-messages`."
-        }
-      ],
-      "example": "ask-marcel list-channel-message-hosted-contents --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
-      "responseShape": "collection of Microsoft Graph `chatMessageHostedContent` resources under `value[]`"
-    },
-    {
-      "name": "list-channel-message-replies",
-      "summary": "List the replies in a Microsoft Teams channel message thread.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages/{chat-message-id}/replies",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-replies",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "Root chatMessage ID. Returned by `ask-marcel list-channel-messages`."
-        }
-      ],
-      "example": "ask-marcel list-channel-message-replies --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2' --chat-message-id '1734567890123'",
-      "responseShape": "collection of Microsoft Graph `chatMessage` replies under `value[]`"
-    },
-    {
-      "name": "list-channel-messages",
-      "summary": "List the root messages in a Microsoft Teams channel.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/messages",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-list-messages",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        }
-      ],
-      "example": "ask-marcel list-channel-messages --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
-      "responseShape": "collection of Microsoft Graph `chatMessage` resources under `value[]`"
-    },
-    {
-      "name": "list-channel-tabs",
-      "summary": "List the pinned tabs (Wiki, Planner, Website, custom apps) of a Microsoft Teams channel.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/channels/{channel-id}/tabs",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/channel-list-tabs",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        },
-        {
-          "name": "channel-id",
-          "key": "channelId",
-          "required": true,
-          "description": "Channel ID. Returned by `ask-marcel list-team-channels`."
-        }
-      ],
-      "example": "ask-marcel list-channel-tabs --team-id 'abc-1234-...' --channel-id '19:def@thread.tacv2'",
-      "responseShape": "collection of Microsoft Graph `teamsTab` resources under `value[]`"
-    },
-    {
       "name": "list-chat-members",
       "summary": "List the members of a single Microsoft Teams chat.",
       "category": "chats",
@@ -1056,83 +757,6 @@
       ],
       "example": "ask-marcel list-chat-members --chat-id '19:abc...@thread.v2'",
       "responseShape": "collection of Microsoft Graph `conversationMember` resources under `value[]`"
-    },
-    {
-      "name": "list-chat-message-hosted-contents",
-      "summary": "List the inline hosted contents (image, GIF, code-snippet) attached to a Microsoft Teams chat message.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/hostedContents",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-hostedcontents",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "chatMessage ID. Returned by `ask-marcel list-chat-messages`."
-        }
-      ],
-      "example": "ask-marcel list-chat-message-hosted-contents --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
-      "responseShape": "collection of Microsoft Graph `chatMessageHostedContent` resources under `value[]`"
-    },
-    {
-      "name": "list-chat-message-replies",
-      "summary": "List the replies in a Microsoft Teams chat message thread.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/messages/{chat-message-id}/replies",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chatmessage-list-replies",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        },
-        {
-          "name": "chat-message-id",
-          "key": "chatMessageId",
-          "required": true,
-          "description": "Root chatMessage ID. Returned by `ask-marcel list-chat-messages`."
-        }
-      ],
-      "example": "ask-marcel list-chat-message-replies --chat-id '19:abc...@thread.v2' --chat-message-id '1734567890123'",
-      "responseShape": "collection of Microsoft Graph `chatMessage` replies under `value[]`"
-    },
-    {
-      "name": "list-chat-messages",
-      "summary": "List the messages in a single Microsoft Teams chat thread (1:1, group, or meeting chat).",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/messages",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list-messages",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat thread ID. Returned by `ask-marcel list-chats` in the `id` field of each chat."
-        }
-      ],
-      "example": "ask-marcel list-chat-messages --chat-id '19:abc...@thread.v2'",
-      "responseShape": "collection of Microsoft Graph `chatMessage` resources under `value[]`"
-    },
-    {
-      "name": "list-chats",
-      "summary": "List the Microsoft Teams chats (1:1, group, meeting) the signed-in user is a member of.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/me/chats",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list",
-      "options": [],
-      "example": "ask-marcel list-chats",
-      "responseShape": "collection of Microsoft Graph `chat` resources under `value[]`"
     },
     {
       "name": "list-drive-item-permissions",
@@ -1477,35 +1101,6 @@
       "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]`"
     },
     {
-      "name": "list-outlook-contacts",
-      "summary": "List the personal Outlook contacts in the signed-in user’s default contacts folder.",
-      "category": "contacts",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/me/contacts",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-contacts",
-      "options": [],
-      "example": "ask-marcel list-outlook-contacts",
-      "responseShape": "collection of Microsoft Graph `contact` resources under `value[]`"
-    },
-    {
-      "name": "list-pinned-chat-messages",
-      "summary": "List the pinned messages in a Microsoft Teams chat.",
-      "category": "chats",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/chats/{chat-id}/pinnedMessages",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/chat-list-pinnedmessages",
-      "options": [
-        {
-          "name": "chat-id",
-          "key": "chatId",
-          "required": true,
-          "description": "Microsoft Teams chat ID. Returned by `ask-marcel list-chats`."
-        }
-      ],
-      "example": "ask-marcel list-pinned-chat-messages --chat-id '19:abc...@thread.v2'",
-      "responseShape": "collection of Microsoft Graph `pinnedChatMessageInfo` resources under `value[]`"
-    },
-    {
       "name": "list-plan-buckets",
       "summary": "List the buckets (columns / lanes) of a Microsoft Planner plan.",
       "category": "tasks",
@@ -1649,24 +1244,6 @@
       "responseShape": "collection of Microsoft Graph `channel` resources under `value[]`"
     },
     {
-      "name": "list-team-members",
-      "summary": "List the members of a single Microsoft Team.",
-      "category": "teams",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/teams/{team-id}/members",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/team-list-members",
-      "options": [
-        {
-          "name": "team-id",
-          "key": "teamId",
-          "required": true,
-          "description": "Microsoft Teams team ID. Returned by `ask-marcel list-joined-teams`."
-        }
-      ],
-      "example": "ask-marcel list-team-members --team-id 'abc-1234-...'",
-      "responseShape": "collection of Microsoft Graph `conversationMember` resources under `value[]`"
-    },
-    {
       "name": "list-todo-linked-resources",
       "summary": "List the linked resources (URLs, emails, files) attached to a Microsoft To Do task.",
       "category": "tasks",
@@ -1736,25 +1313,6 @@
       ],
       "example": "ask-marcel next-page --url 'https://graph.microsoft.com/v1.0/me/messages?$skip=10'",
       "responseShape": "same shape as the originating endpoint (typically `{ value: [...], \"@odata.nextLink\": \"...\" }`)"
-    },
-    {
-      "name": "search-graph-messages",
-      "summary": "Search Microsoft Teams channel messages and 1:1 / group chat messages with a free-text or KQL query (Microsoft Search API).",
-      "category": "teams",
-      "graphMethod": "POST",
-      "graphPathTemplate": "/search/query",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/search-query",
-      "options": [
-        {
-          "name": "query",
-          "key": "query",
-          "required": true,
-          "description": "KQL or free-text query. Searches every Teams channel message and 1:1 / group chat message the signed-in user can read. Examples: `quarterly review`, `from:alice@contoso.com`, `subject:standup sent>=2026-01-01`."
-        }
-      ],
-      "example": "ask-marcel search-graph-messages --query 'quarterly review'",
-      "responseShape": "Microsoft Search response: `value[].hitsContainers[].hits[]` where each `hit.resource` is a `chatMessage` resource",
-      "bodyTemplate": "{ \"requests\": [{ \"entityTypes\": [\"chatMessage\"], \"query\": { \"queryString\": \"{query}\" } }] }"
     },
     {
       "name": "search-mail-messages",
@@ -1833,24 +1391,6 @@
       ],
       "example": "ask-marcel search-onenote-pages --query 'meeting notes'",
       "responseShape": "collection of Microsoft Graph `onenotePage` resources under `value[]`"
-    },
-    {
-      "name": "search-outlook-contacts",
-      "summary": "Search the signed-in user’s Outlook contacts using KQL or free text. Matches name, email, company, and phone fields.",
-      "category": "contacts",
-      "graphMethod": "GET",
-      "graphPathTemplate": "/me/contacts?$search=\"{query}\"",
-      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/user-list-contacts",
-      "options": [
-        {
-          "name": "query",
-          "key": "query",
-          "required": true,
-          "description": "KQL or free-text query. Searches displayName, givenName, surname, emailAddresses, companyName, and phone fields. Examples: `Alice`, `displayName:Alice`, `companyName:Contoso`."
-        }
-      ],
-      "example": "ask-marcel search-outlook-contacts --query 'Alice'",
-      "responseShape": "collection of Microsoft Graph `contact` resources under `value[]`, ranked by relevance"
     },
     {
       "name": "search-sharepoint-sites",

@@ -6,6 +6,6 @@ describe('commands index', () => {
     const names = Object.keys(commands);
     expect(names.length).toBeGreaterThan(0);
     expect(names).toContain('list-drives');
-    expect(names).toContain('list-channel-tabs');
+    expect(names).toContain('list-joined-teams');
   });
 });
