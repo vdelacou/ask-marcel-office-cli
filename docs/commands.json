@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
   "version": "0.2.1",
-  "generatedAt": "2026-04-30T06:33:42.260Z",
+  "generatedAt": "2026-04-30T06:39:52.417Z",
   "commands": [
     {
       "name": "download-onedrive-file-content",
@@ -1238,6 +1238,35 @@
       ],
       "example": "ask-marcel list-folder-files --drive-id 'b!1234' --item-id '01ROOT'",
       "responseShape": "collection of Microsoft Graph `driveItem` resources under `value[]`"
+    },
+    {
+      "name": "list-incomplete-planner-tasks",
+      "summary": "List every incomplete Microsoft Planner task assigned to or owned by the signed-in user, across every plan.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/planner/tasks?$filter=percentComplete ne 100",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/planneruser-list-tasks",
+      "options": [],
+      "example": "ask-marcel list-incomplete-planner-tasks",
+      "responseShape": "collection of Microsoft Graph `plannerTask` resources under `value[]` where `percentComplete < 100`"
+    },
+    {
+      "name": "list-incomplete-todo-tasks",
+      "summary": "List every incomplete Microsoft To Do task in a given list (status not equal to `completed`).",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/todo/lists/{todo-task-list-id}/tasks?$filter=status ne 'completed'",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/todotasklist-list-tasks",
+      "options": [
+        {
+          "name": "todo-task-list-id",
+          "key": "todoTaskListId",
+          "required": true,
+          "description": "todoTaskList ID. Returned by `ask-marcel list-todo-task-lists`. Well-known names also work, e.g. `tasks` for the default list. There is no Graph endpoint that returns incomplete tasks across every list — call this once per list."
+        }
+      ],
+      "example": "ask-marcel list-incomplete-todo-tasks --todo-task-list-id 'tasks'",
+      "responseShape": "collection of Microsoft Graph `todoTask` resources under `value[]` where `status != \"completed\"`"
     },
     {
       "name": "list-joined-teams",

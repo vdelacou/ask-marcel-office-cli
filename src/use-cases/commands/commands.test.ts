@@ -61,6 +61,8 @@ import * as listDriveItemPermissions from './list-drive-item-permissions.ts';
 import * as listDriveItemVersions from './list-drive-item-versions.ts';
 import * as listDrives from './list-drives.ts';
 import * as listExcelTableRows from './list-excel-table-rows.ts';
+import * as listIncompletePlannerTasks from './list-incomplete-planner-tasks.ts';
+import * as listIncompleteTodoTasks from './list-incomplete-todo-tasks.ts';
 import * as listExcelTables from './list-excel-tables.ts';
 import * as listExcelWorksheets from './list-excel-worksheets.ts';
 import * as listFolderFiles from './list-folder-files.ts';
@@ -130,9 +132,11 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'get-sharepoint-sites-delta': getSharepointSitesDelta,
   'list-todo-task-lists': listTodoTaskLists,
   'list-todo-tasks': listTodoTasks,
+  'list-incomplete-todo-tasks': listIncompleteTodoTasks,
   'get-todo-task': getTodoTask,
   'list-todo-linked-resources': listTodoLinkedResources,
   'list-planner-tasks': listPlannerTasks,
+  'list-incomplete-planner-tasks': listIncompletePlannerTasks,
   'get-planner-plan': getPlannerPlan,
   'list-plan-tasks': listPlanTasks,
   'get-planner-task': getPlannerTask,
@@ -296,6 +300,18 @@ describe('commands', () => {
     if (result.ok) expect(result.value).toEqual({ value: [{ displayName: 'Marketing site' }] });
   });
 
+  it('list-incomplete-planner-tasks filters Planner tasks by percentComplete ne 100', async () => {
+    const result = await callCommand('list-incomplete-planner-tasks', {}, { value: [{ id: 'pt1', percentComplete: 0 }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ id: 'pt1', percentComplete: 0 }] });
+  });
+
+  it('list-incomplete-todo-tasks filters To Do tasks by status ne completed within a list', async () => {
+    const result = await callCommand('list-incomplete-todo-tasks', { todoTaskListId: 'tl1' }, { value: [{ id: 'tt1', status: 'inProgress' }] });
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.value).toEqual({ value: [{ id: 'tt1', status: 'inProgress' }] });
+  });
+
   it('search-graph-messages POSTs a Microsoft Search query with chatMessage entityType and the user-supplied query string', async () => {
     const cmd = cmdMap['search-graph-messages'];
     if (!cmd) throw new Error('search-graph-messages not registered');
@@ -415,9 +431,11 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'get-sharepoint-sites-delta', params: {} },
   { name: 'list-todo-task-lists', params: {} },
   { name: 'list-todo-tasks', params: { todoTaskListId: 'tl1' } },
+  { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' } },
   { name: 'get-todo-task', params: { todoTaskListId: 'tl1', todoTaskId: 't1' } },
   { name: 'list-todo-linked-resources', params: { todoTaskListId: 'tl1', todoTaskId: 't1' } },
   { name: 'list-planner-tasks', params: {} },
+  { name: 'list-incomplete-planner-tasks', params: {} },
   { name: 'get-planner-plan', params: { plannerPlanId: 'p1' } },
   { name: 'list-plan-tasks', params: { plannerPlanId: 'p1' } },
   { name: 'get-planner-task', params: { plannerTaskId: 't1' } },
@@ -513,6 +531,7 @@ describe('command schema rejection', () => {
     { name: 'search-onenote-pages', params: {} },
     { name: 'search-sharepoint-sites-by-name', params: {} },
     { name: 'search-graph-messages', params: {} },
+    { name: 'list-incomplete-todo-tasks', params: {} },
   ];
 
   it.each(rejectCases)('$name rejects missing required params', async ({ name, params }) => {
@@ -562,9 +581,11 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'get-sharepoint-sites-delta', params: {}, expectedPath: '/sites/delta()' },
   { name: 'list-todo-task-lists', params: {}, expectedPath: '/me/todo/lists' },
   { name: 'list-todo-tasks', params: { todoTaskListId: 'tl1' }, expectedPath: '/me/todo/lists/tl1/tasks' },
+  { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' }, expectedPath: "/me/todo/lists/tl1/tasks?$filter=status ne 'completed'" },
   { name: 'get-todo-task', params: { todoTaskListId: 'tl1', todoTaskId: 't1' }, expectedPath: '/me/todo/lists/tl1/tasks/t1' },
   { name: 'list-todo-linked-resources', params: { todoTaskListId: 'tl1', todoTaskId: 't1' }, expectedPath: '/me/todo/lists/tl1/tasks/t1/linkedResources' },
   { name: 'list-planner-tasks', params: {}, expectedPath: '/me/planner/tasks' },
+  { name: 'list-incomplete-planner-tasks', params: {}, expectedPath: '/me/planner/tasks?$filter=percentComplete ne 100' },
   { name: 'get-planner-plan', params: { plannerPlanId: 'p1' }, expectedPath: '/planner/plans/p1' },
   { name: 'list-plan-tasks', params: { plannerPlanId: 'p1' }, expectedPath: '/planner/plans/p1/tasks' },
   { name: 'get-planner-task', params: { plannerTaskId: 't1' }, expectedPath: '/planner/tasks/t1' },

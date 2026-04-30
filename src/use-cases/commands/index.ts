@@ -55,6 +55,8 @@ import * as listDriveItemPermissions from './list-drive-item-permissions.ts';
 import * as listDriveItemVersions from './list-drive-item-versions.ts';
 import * as listDrives from './list-drives.ts';
 import * as listExcelTableRows from './list-excel-table-rows.ts';
+import * as listIncompletePlannerTasks from './list-incomplete-planner-tasks.ts';
+import * as listIncompleteTodoTasks from './list-incomplete-todo-tasks.ts';
 import * as listExcelTables from './list-excel-tables.ts';
 import * as listExcelWorksheets from './list-excel-worksheets.ts';
 import * as listFolderFiles from './list-folder-files.ts';
@@ -124,9 +126,11 @@ const commands: Record<string, Command> = {
   'get-sharepoint-sites-delta': getSharepointSitesDelta,
   'list-todo-task-lists': listTodoTaskLists,
   'list-todo-tasks': listTodoTasks,
+  'list-incomplete-todo-tasks': listIncompleteTodoTasks,
   'get-todo-task': getTodoTask,
   'list-todo-linked-resources': listTodoLinkedResources,
   'list-planner-tasks': listPlannerTasks,
+  'list-incomplete-planner-tasks': listIncompletePlannerTasks,
   'get-planner-plan': getPlannerPlan,
   'list-plan-tasks': listPlanTasks,
   'get-planner-task': getPlannerTask,
