@@ -62,6 +62,7 @@ import * as listOnenoteNotebooks from './list-onenote-notebooks.ts';
 import * as listOnenoteSectionPages from './list-onenote-section-pages.ts';
 import * as listPlanBuckets from './list-plan-buckets.ts';
 import * as listPlanTasks from './list-plan-tasks.ts';
+import * as listPlannerPlans from './list-planner-plans.ts';
 import * as listPlannerTasks from './list-planner-tasks.ts';
 import * as listSharepointSiteDrives from './list-sharepoint-site-drives.ts';
 import * as listSharepointSiteListItems from './list-sharepoint-site-list-items.ts';
@@ -111,6 +112,7 @@ const cmdMap: Record<string, { execute: typeof listDrives.execute }> = {
   'list-incomplete-todo-tasks': listIncompleteTodoTasks,
   'get-todo-task': getTodoTask,
   'list-todo-linked-resources': listTodoLinkedResources,
+  'list-planner-plans': listPlannerPlans,
   'list-planner-tasks': listPlannerTasks,
   'list-incomplete-planner-tasks': listIncompletePlannerTasks,
   'get-planner-plan': getPlannerPlan,
@@ -389,6 +391,7 @@ const allCommandFixtures: CommandFixture[] = [
   { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' } },
   { name: 'get-todo-task', params: { todoTaskListId: 'tl1', todoTaskId: 't1' } },
   { name: 'list-todo-linked-resources', params: { todoTaskListId: 'tl1', todoTaskId: 't1' } },
+  { name: 'list-planner-plans', params: {} },
   { name: 'list-planner-tasks', params: {} },
   { name: 'list-incomplete-planner-tasks', params: {} },
   { name: 'get-planner-plan', params: { plannerPlanId: 'p1' } },
@@ -521,6 +524,7 @@ const pathFixtures: Array<{ name: string; params: Record<string, string>; expect
   { name: 'list-incomplete-todo-tasks', params: { todoTaskListId: 'tl1' }, expectedPath: "/me/todo/lists/tl1/tasks?$filter=status ne 'completed'" },
   { name: 'get-todo-task', params: { todoTaskListId: 'tl1', todoTaskId: 't1' }, expectedPath: '/me/todo/lists/tl1/tasks/t1' },
   { name: 'list-todo-linked-resources', params: { todoTaskListId: 'tl1', todoTaskId: 't1' }, expectedPath: '/me/todo/lists/tl1/tasks/t1/linkedResources' },
+  { name: 'list-planner-plans', params: {}, expectedPath: '/me/planner/plans' },
   { name: 'list-planner-tasks', params: {}, expectedPath: '/me/planner/tasks' },
   { name: 'list-incomplete-planner-tasks', params: {}, expectedPath: '/me/planner/tasks?$filter=percentComplete ne 100' },
   { name: 'get-planner-plan', params: { plannerPlanId: 'p1' }, expectedPath: '/planner/plans/p1' },

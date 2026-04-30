@@ -14,6 +14,12 @@ type FetchFn = (url: string, init?: RequestInit) => Promise<Response>;
 
 const isJson = (contentType: string | null): boolean => contentType !== null && contentType.toLowerCase().includes('application/json');
 
+const isText = (contentType: string | null): boolean => {
+  if (contentType === null) return false;
+  const lower = contentType.toLowerCase();
+  return lower.startsWith('text/') || lower.includes('+xml') || lower.includes('application/xml') || lower.includes('application/javascript');
+};
+
 const toBase64 = (bytes: Uint8Array): string => {
   let binary = '';
   for (const byte of bytes) binary += String.fromCharCode(byte);
@@ -76,6 +82,10 @@ const createGraphClient = (auth: AuthManager, fetchFn: FetchFn = globalThis.fetc
       }
       const contentType = res.headers.get('content-type');
       if (isJson(contentType)) return ok(await res.json());
+      if (isText(contentType)) {
+        const text = await res.text();
+        return ok({ contentType: contentType ?? 'text/plain', size: text.length, text });
+      }
       const buffer = await res.arrayBuffer();
       return ok({ contentType: contentType ?? 'application/octet-stream', size: buffer.byteLength, base64: toBase64(new Uint8Array(buffer)) });
     } catch (e: unknown) {

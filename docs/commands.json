@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
-  "version": "0.5.2",
-  "generatedAt": "2026-04-30T08:44:06.812Z",
+  "version": "0.5.3",
+  "generatedAt": "2026-04-30T08:57:02.797Z",
   "commands": [
     {
       "name": "download-drive-item-version-content",
@@ -308,7 +308,7 @@
     },
     {
       "name": "get-onenote-page-content",
-      "summary": "Get the HTML body of a single OneNote page.",
+      "summary": "Get the HTML body of a single OneNote page. Returned in a JSON envelope so the HTML survives transport.",
       "category": "notes",
       "graphMethod": "GET",
       "graphPathTemplate": "/me/onenote/pages/{onenote-page-id}/content",
@@ -322,7 +322,7 @@
         }
       ],
       "example": "ask-marcel get-onenote-page-content --onenote-page-id '1-abc...'",
-      "responseShape": "HTML string (the rendered page body)"
+      "responseShape": "`{ contentType: \"text/html\", size: <chars>, text: \"<html>...\" }` — the rendered OneNote page body wrapped in a JSON envelope"
     },
     {
       "name": "get-planner-bucket",
@@ -1135,6 +1135,17 @@
       ],
       "example": "ask-marcel list-plan-tasks --planner-plan-id 'xqQg5FS2LkCp935s-FIFm5gAB6'",
       "responseShape": "collection of Microsoft Graph `plannerTask` resources under `value[]`"
+    },
+    {
+      "name": "list-planner-plans",
+      "summary": "List every Microsoft Planner plan the signed-in user has access to (across every group). Use this to discover plan IDs without needing an existing task as the entry point.",
+      "category": "tasks",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/me/planner/plans",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/planneruser-list-plans",
+      "options": [],
+      "example": "ask-marcel list-planner-plans",
+      "responseShape": "collection of Microsoft Graph `plannerPlan` resources under `value[]`"
     },
     {
       "name": "list-planner-tasks",

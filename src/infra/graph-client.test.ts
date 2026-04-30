@@ -124,6 +124,20 @@ describe('graph client', () => {
     }
   });
 
+  it('getBinary returns text/* responses as a { text } envelope rather than base64', async () => {
+    const html = '<html lang="en"><body>OneNote page</body></html>';
+    const fetchFn: FetchFn = async () => new Response(html, { status: 200, headers: { 'content-type': 'text/html' } });
+    const client = createGraphClient(fakeAuth(), fetchFn);
+    const result = await client.getBinary('/me/onenote/pages/p1/content');
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const v = result.value as { contentType: string; size: number; text: string };
+      expect(v.contentType).toBe('text/html');
+      expect(v.text).toBe(html);
+      expect(v.size).toBe(html.length);
+    }
+  });
+
   it('getBinary base64-encodes binary bodies and reports content-type and size', async () => {
     const bytes = new Uint8Array([0xff, 0xd8, 0xff, 0xe0]);
     const fetchFn: FetchFn = async () => new Response(bytes, { status: 200, headers: { 'content-type': 'image/jpeg' } });

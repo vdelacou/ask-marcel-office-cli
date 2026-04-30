@@ -69,6 +69,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 | `list-incomplete-todo-tasks` | List every incomplete Microsoft To Do task in a given list (status not equal to `completed`). | `--todo-task-list-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks?$filter=status ne 'completed'` |
 | `list-plan-buckets` | List the buckets (columns / lanes) of a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/buckets` |
 | `list-plan-tasks` | List every task within a Microsoft Planner plan. | `--planner-plan-id` | `GET /planner/plans/{planner-plan-id}/tasks` |
+| `list-planner-plans` | List every Microsoft Planner plan the signed-in user has access to (across every group). Use this to discover plan IDs without needing an existing task as the entry point. | _(none)_ | `GET /me/planner/plans` |
 | `list-planner-tasks` | List every Microsoft Planner task assigned to or owned by the signed-in user, across all plans. | _(none)_ | `GET /me/planner/tasks` |
 | `list-todo-linked-resources` | List the linked resources (URLs, emails, files) attached to a Microsoft To Do task. | `--todo-task-list-id`, `--todo-task-id` | `GET /me/todo/lists/{todo-task-list-id}/tasks/{todo-task-id}/linkedResources` |
 | `list-todo-task-lists` | List the signed-in user’s Microsoft To Do task lists (e.g. `Tasks`, `Flagged Emails`, custom lists). | _(none)_ | `GET /me/todo/lists` |
@@ -93,7 +94,7 @@ Microsoft Graph CLI — designed for LLM consumption via skills. Explicit comman
 
 | Command | Description | Required params | Graph endpoint |
 |---------|-------------|-----------------|----------------|
-| `get-onenote-page-content` | Get the HTML body of a single OneNote page. | `--onenote-page-id` | `GET /me/onenote/pages/{onenote-page-id}/content` |
+| `get-onenote-page-content` | Get the HTML body of a single OneNote page. Returned in a JSON envelope so the HTML survives transport. | `--onenote-page-id` | `GET /me/onenote/pages/{onenote-page-id}/content` |
 | `list-all-onenote-sections` | List every OneNote section the signed-in user can see, across all notebooks. | _(none)_ | `GET /me/onenote/sections` |
 | `list-onenote-notebook-sections` | List the sections of a single OneNote notebook. | `--notebook-id` | `GET /me/onenote/notebooks/{notebook-id}/sections` |
 | `list-onenote-notebooks` | List the OneNote notebooks owned by the signed-in user. | _(none)_ | `GET /me/onenote/notebooks` |

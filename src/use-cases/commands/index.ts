@@ -56,6 +56,7 @@ import * as listOnenoteNotebooks from './list-onenote-notebooks.ts';
 import * as listOnenoteSectionPages from './list-onenote-section-pages.ts';
 import * as listPlanBuckets from './list-plan-buckets.ts';
 import * as listPlanTasks from './list-plan-tasks.ts';
+import * as listPlannerPlans from './list-planner-plans.ts';
 import * as listPlannerTasks from './list-planner-tasks.ts';
 import * as listSharepointSiteDrives from './list-sharepoint-site-drives.ts';
 import * as listSharepointSiteListItems from './list-sharepoint-site-list-items.ts';
@@ -105,6 +106,7 @@ const commands: Record<string, Command> = {
   'list-incomplete-todo-tasks': listIncompleteTodoTasks,
   'get-todo-task': getTodoTask,
   'list-todo-linked-resources': listTodoLinkedResources,
+  'list-planner-plans': listPlannerPlans,
   'list-planner-tasks': listPlannerTasks,
   'list-incomplete-planner-tasks': listIncompletePlannerTasks,
   'get-planner-plan': getPlannerPlan,
