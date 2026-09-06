@@ -86,6 +86,7 @@ import * as searchAllFiles from './search-all-files.ts';
 import * as searchSharepointSitesByName from './search-sharepoint-sites-by-name.ts';
 import * as convertMailAttachmentToMarkdown from './convert-mail-attachment-to-markdown.ts';
 import * as readMailAttachment from './read-mail-attachment.ts';
+import * as extractGroupPostAttachmentImages from './extract-group-post-attachment-images.ts';
 import * as extractMailAttachmentImages from './extract-mail-attachment-images.ts';
 import * as convertMailAttachmentToPdf from './convert-mail-attachment-to-pdf.ts';
 import * as listCalendarEventAttachments from './list-calendar-event-attachments.ts';
@@ -272,6 +273,7 @@ const modules: Record<string, Command> = {
   'list-calendar-event-attachments': listCalendarEventAttachments,
   'convert-calendar-event-attachment-to-markdown': convertCalendarEventAttachmentToMarkdown,
   'convert-calendar-event-attachment-to-pdf': convertCalendarEventAttachmentToPdf,
+  'extract-group-post-attachment-images': extractGroupPostAttachmentImages,
   'extract-mail-attachment-images': extractMailAttachmentImages,
   'list-onenote-notebooks': listOnenoteNotebooks,
   'list-onenote-notebook-sections': listOnenoteNotebookSections,
