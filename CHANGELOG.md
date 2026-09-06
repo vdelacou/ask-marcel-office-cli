@@ -4,6 +4,26 @@ All notable changes to `ask-marcel-office-cli` are documented here.
 
 ## 2.5.0
 
+### Fixed: the group conversation collections stop advertising a filter Graph refuses
+
+`list-group-threads` and `list-group-conversations` handed out the full OData
+option set, so both advertised `--filter`. Graph accepts it on neither. Probed
+live on a group the signed-in user belongs to: any predicate on the threads
+collection answers `ConversationFilterOther`, `isLocked eq false` answers
+`ConversationFilterIsLockedEqualsFalse` because the only accepted forms are
+`IsLocked eq true` and `IsLocked ne false`, and a predicate on conversations
+answers `ErrorUnsupportedPathForQuery`.
+
+That broke the promise the usage guide makes, that the CLI advertises only the
+flags the endpoint honours so the manifest never lies. An agent reading the
+manifest spent a round trip to find out. `--filter` is dropped from both; the
+flag is now refused locally with the unknown-flag hint and no network call.
+Filtering a group inbox down to its locked threads is not a use this CLI has,
+so the one working predicate did not earn a caveat in its place.
+
+`--top`, `--skip`, `--orderby`, `--select` and `--expand` are all honoured on
+both collections and are unchanged.
+
 ### Added: docx tracked changes cover the table
 
 `extractDocxMetadata` reported formatting revisions on runs and paragraphs only,

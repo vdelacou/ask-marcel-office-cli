@@ -1,10 +1,17 @@
 import { z } from 'zod';
-import { buildListCommand } from './build-command.ts';
+import { buildPickODataListCommand } from './build-command.ts';
 import type { CommandMeta } from './command-types.ts';
-import { odataQueryOptions } from './odata-query.ts';
+import { pickODataOptions } from './odata-query.ts';
+
+// Graph refuses `$filter` on this collection. Probed live 2026-09-06 on a group
+// the signed-in user belongs to: a predicate over `topic` answers
+// `ErrorUnsupportedPathForQuery`, and unlike the sibling `threads` collection
+// there is not even an `IsLocked` form that works. `$top`, `$skip`, `$orderby`,
+// `$select` and `$expand` are honoured and stay.
+const HONOURED = ['top', 'skip', 'select', 'orderby', 'expand'] as const;
 
 const baseSchema = z.object({ groupId: z.string().min(1) });
-const { execute, schema } = buildListCommand((p) => `/groups/${p.groupId}/conversations`, baseSchema);
+const { execute, schema } = buildPickODataListCommand((p) => `/groups/${p.groupId}/conversations`, baseSchema, HONOURED);
 
 const meta: CommandMeta = {
   summary:
@@ -20,7 +27,7 @@ const meta: CommandMeta = {
       required: true,
       description: 'Azure AD group object ID for a unified (Microsoft 365) group.',
     },
-    ...odataQueryOptions,
+    ...pickODataOptions(HONOURED),
   ],
   example: "ask-marcel-office list-group-conversations --group-id 'a1b2c3d4-...'",
   responseShape: 'collection of Microsoft Graph `conversation` resources under `value[]`',

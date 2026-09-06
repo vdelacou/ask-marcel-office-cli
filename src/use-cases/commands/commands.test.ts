@@ -7318,6 +7318,23 @@ describe('chats endpoints advertise only the OData flags Graph honours', () => {
   });
 });
 
+describe('the group conversation collections drop $filter, which Graph refuses', () => {
+  it('list-group-threads.meta.options exposes top/skip/select/orderby/expand but NOT filter', () => {
+    const names = listGroupThreads.meta.options.map((o) => o.name).toSorted((a, b) => a.localeCompare(b));
+    expect(names).toEqual(['expand', 'group-id', 'orderby', 'select', 'skip', 'top']);
+  });
+
+  it('list-group-conversations.meta.options exposes top/skip/select/orderby/expand but NOT filter', () => {
+    const names = listGroupConversations.meta.options.map((o) => o.name).toSorted((a, b) => a.localeCompare(b));
+    expect(names).toEqual(['expand', 'group-id', 'orderby', 'select', 'skip', 'top']);
+  });
+
+  it('list-group-threads keeps $filter out of the URL even when a caller supplies it', async () => {
+    const url = await capturedUrl('list-group-threads', { groupId: 'g1', top: '2', select: 'id', filter: "topic eq 'x'" });
+    expect(url).toBe('https://graph.microsoft.com/v1.0/groups/g1/threads?$top=2&$select=id');
+  });
+});
+
 // — the single-resource GET on a Microsoft task list was
 // the only "get" without `--select`. Sister GETs (get-my-manager,
 // get-user-manager, get-mail-message, etc.) all expose `--select`/`--expand`
