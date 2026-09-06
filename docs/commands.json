@@ -1,7 +1,7 @@
 {
   "package": "ask-marcel-office-cli",
   "version": "2.5.0",
-  "generatedAt": "2026-09-06T12:37:19.246Z",
+  "generatedAt": "2026-09-06T15:01:53.362Z",
   "commands": [
     {
       "name": "convert-calendar-event-attachment-to-markdown",
@@ -196,6 +196,43 @@
       ],
       "example": "ask-marcel-office convert-group-post-attachment-to-markdown --group-id 'a1b2c3d4-...' --thread-id 'AAQkAD...' --post-id 'AQMkAD...' --attachment-id 'AAMkAD...'",
       "responseShape": "`{ contentType: \"text/markdown\", size, text }` on success (file and reference attachments run through the conversion dispatch; an embedded item is rendered locally). Plain-text sources return the raw-bytes envelope, and a PDF source carries `pageCount`. Unsupported types return an api_error with status 415 naming `get-group-post-attachment` as the way to the bytes.",
+      "producesBytes": true
+    },
+    {
+      "name": "convert-group-post-attachment-to-pdf",
+      "summary": "Convert an attachment on one post of a unified (Microsoft 365) group thread to PDF on the fly, the `convert-mail-attachment-to-pdf` sibling for a group inbox and sharing its pipeline. fileAttachment uploads the bytes to a temp folder under the SIGNED-IN user’s /me/drive (the post is read from the group, the render happens on your own drive), runs Graph `?format=pdf`, then deletes the temp item; referenceAttachment resolves via /shares/{token}/driveItem and converts in place; plain-text and `pdf` sources short-circuit to a raw-bytes envelope (Graph’s `?format=pdf` does not accept `pdf` as an input). image attachments are rejected (Graph rejects image inputs); itemAttachment (embedded mail / event / contact) is unsupported — use `convert-group-post-attachment-to-markdown`. This is the command to reach for when a deck is posted to a group and slide layout matters to a vision-capable model.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/groups/{group-id}/threads/{thread-id}/posts/{post-id}/attachments/{attachment-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/attachment-get",
+      "options": [
+        {
+          "name": "group-id",
+          "key": "groupId",
+          "required": true,
+          "description": "Azure AD group object ID for a unified (Microsoft 365) group you belong to."
+        },
+        {
+          "name": "thread-id",
+          "key": "threadId",
+          "required": true,
+          "description": "Conversation thread ID, the `id` of a `list-group-threads` entry."
+        },
+        {
+          "name": "post-id",
+          "key": "postId",
+          "required": true,
+          "description": "Post ID inside that thread, the `id` of a `list-group-thread-posts` entry."
+        },
+        {
+          "name": "attachment-id",
+          "key": "attachmentId",
+          "required": true,
+          "description": "Attachment ID inside that post. Returned by `list-group-post-attachments`."
+        }
+      ],
+      "example": "ask-marcel-office convert-group-post-attachment-to-pdf --group-id 'a1b2c3d4-...' --thread-id 'AAQkAD...' --post-id 'AAMkAD...' --attachment-id 'AAMkAD...attach1' --output-path ./deck.pdf",
+      "responseShape": "`{ contentType: \"application/pdf\", size, base64 }` — the PDF bytes, inlined. Plain-text and pdf sources short-circuit to `{ contentType, size, base64, note }`; image attachments return api_error 415; itemAttachment returns api_error 400. Pair with the global `--output-path` to land the bytes on disk and replace `base64` with `savedTo`.",
       "producesBytes": true
     },
     {
@@ -926,6 +963,43 @@
       "producesMedia": true
     },
     {
+      "name": "extract-group-post-attachment-images",
+      "summary": "Extract the embedded images from an attachment on one post of a unified (Microsoft 365) group thread, the `extract-mail-attachment-images` sibling for a group inbox and sharing its pipeline. Handles a pdf or a docx / xlsx / pptx (and their macro-enabled / template variants). OOXML reads the media parts directly (png/jpg/gif/bmp/tiff/webp/svg), including full-resolution / un-cropped originals and images on hidden slides; pdf walks every page via unpdf and re-encodes each painted image as PNG (page-oriented — not layer-hidden/unpainted/uncropped originals). fileAttachment decodes the inline bytes; referenceAttachment resolves via /shares/{token}/driveItem and fetches the content. Pair with the global output-dir flag to write every image to a folder; otherwise the bytes ride back base64-encoded. svg rides back as its XML source (which carries the diagram text labels); legacy vector (emf/wmf) and audio/video are skipped. itemAttachment and unsupported formats return a 415. This is how a diagram inside a document posted to a group survives into a searchable form.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/groups/{group-id}/threads/{thread-id}/posts/{post-id}/attachments/{attachment-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/attachment-get",
+      "options": [
+        {
+          "name": "group-id",
+          "key": "groupId",
+          "required": true,
+          "description": "Azure AD group object ID for a unified (Microsoft 365) group you belong to."
+        },
+        {
+          "name": "thread-id",
+          "key": "threadId",
+          "required": true,
+          "description": "Conversation thread ID, the `id` of a `list-group-threads` entry."
+        },
+        {
+          "name": "post-id",
+          "key": "postId",
+          "required": true,
+          "description": "Post ID inside that thread, the `id` of a `list-group-thread-posts` entry."
+        },
+        {
+          "name": "attachment-id",
+          "key": "attachmentId",
+          "required": true,
+          "description": "Attachment ID inside that post. Returned by `list-group-post-attachments`."
+        }
+      ],
+      "example": "ask-marcel-office extract-group-post-attachment-images --group-id 'a1b2c3d4-...' --thread-id 'AAQkAD...' --post-id 'AAMkAD...' --attachment-id 'AAMkAD...attach1' --output-dir ./post-images",
+      "responseShape": "`{ count, media: [{ path, contentType, sizeBytes, base64 }] }`. `path` is the in-package part path (e.g. `ppt/media/image3.png`). Pair with the global `--output-dir <dir>` to write each image to that folder — the response then replaces each `base64` with `savedTo` (the part path is flattened, e.g. `pdf_page2_Im0.png`). `count: 0` means the attachment embeds no extractable images (after the emf/wmf/audio/video filter).",
+      "producesMedia": true
+    },
+    {
       "name": "extract-local-file-images",
       "summary": "Extract the embedded images from a file ON DISK — the local sibling of `extract-drive-item-images`, and like `convert-local-file-to-markdown` it never calls Microsoft Graph (works offline, no login). Same per-extension dispatch: docx / xlsx / pptx (and their macro-enabled / template variants) have their OOXML media parts read directly (png/jpg/gif/bmp/tiff/webp/svg — full-resolution originals, including images on hidden slides); a pdf is walked page by page via unpdf with each painted image re-encoded as PNG. Two flows only this command completes: a Graph-rendered PDF saved locally (legacy `.ppt` → `download-drive-item-as-pdf` with the global output-path flag → this command pulls the slide images for OCR), and Office files unpacked from a local archive. Pair with the global output-dir flag to write every image to a folder; otherwise the bytes ride back base64-encoded. Any other extension returns a 415 naming the local ways out.",
       "category": "meta",
@@ -992,6 +1066,36 @@
       ],
       "example": "ask-marcel-office extract-sharepoint-links-in-documents --drive-id 'b!1234' --item-id '01ABC'",
       "responseShape": "`{ driveId, itemId, links: [{ url, driveId, itemId, name, webUrl } | { url, error }], truncated, skippedCount }` — one entry per unique SharePoint URL found in the document’s external relationships."
+    },
+    {
+      "name": "extract-sharepoint-links-in-group-post",
+      "summary": "Find every `*.sharepoint.com` URL in the body of one post of a unified (Microsoft 365) group thread and resolve each to its driveItem (driveId, itemId, name, webUrl), so the agent can feed those into `download-drive-item-as-pdf` / `-as-markdown`. The `extract-sharepoint-links-in-mail` sibling for a group inbox, sharing its resolver. Read-only — no conversion happens here. Capped at 25 unique URLs per call to bound fan-out (returns `truncated: true` and `skippedCount` when the body has more); duplicate URLs are deduplicated. Per-link errors are captured inside each entry instead of failing the whole call. A post whose body carries no SharePoint URL returns an empty `links` list, not an error. Access is membership-gated: a group the signed-in user does not belong to answers `ErrorAccessDenied`.",
+      "category": "mail",
+      "graphMethod": "GET",
+      "graphPathTemplate": "/groups/{group-id}/threads/{thread-id}/posts/{post-id}",
+      "graphDocsUrl": "https://learn.microsoft.com/en-us/graph/api/post-get",
+      "options": [
+        {
+          "name": "group-id",
+          "key": "groupId",
+          "required": true,
+          "description": "Azure AD group object ID for a unified (Microsoft 365) group you belong to."
+        },
+        {
+          "name": "thread-id",
+          "key": "threadId",
+          "required": true,
+          "description": "Conversation thread ID, the `id` of a `list-group-threads` entry."
+        },
+        {
+          "name": "post-id",
+          "key": "postId",
+          "required": true,
+          "description": "Post ID inside that thread, the `id` of a `list-group-thread-posts` entry."
+        }
+      ],
+      "example": "ask-marcel-office extract-sharepoint-links-in-group-post --group-id 'a1b2c3d4-...' --thread-id 'AAQkAD...' --post-id 'AAMkAD...'",
+      "responseShape": "`{ groupId, threadId, postId, links: [{ url, driveId, itemId, name, webUrl } | { url, error }], truncated, skippedCount }` — one entry per unique SharePoint URL found in the body, ordered by first occurrence."
     },
     {
       "name": "extract-sharepoint-links-in-mail",

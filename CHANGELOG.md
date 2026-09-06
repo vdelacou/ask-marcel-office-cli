@@ -4,6 +4,39 @@ All notable changes to `ask-marcel-office-cli` are documented here.
 
 ## Unreleased
 
+### Added: a group post reaches as far as a mail message
+
+`convert-group-post-attachment-to-markdown` and `get-group-post-attachment`
+shipped in 2.5.0, so a post's attachment was reachable and its bytes were
+reachable. Three things the mail side does were not, and a consumer mirroring a
+group inbox had to answer each with an honest empty result:
+
+- `convert-group-post-attachment-to-pdf` renders an attached deck, where before
+  it yielded text and no pages. It shares the mail pipeline: the bytes go to a
+  temp folder under the SIGNED-IN user's own drive, Graph converts, the temp
+  item is deleted. 2.5.0 documented a post as having no PDF sibling on the
+  grounds that this would mean uploading to the caller's drive; that is what the
+  mail and calendar paths already do, so it was an omission rather than an
+  obstacle. The unconvertible-format hints now point here instead of at the raw
+  bytes, except for images, which Graph's `?format=pdf` rejects outright.
+- `extract-group-post-attachment-images` pulls the diagrams out of a document
+  posted to a group, so the text inside a picture becomes searchable.
+- `extract-sharepoint-links-in-group-post` resolves every `*.sharepoint.com`
+  URL in a post body to its driveItem, the same 25-URL cap and per-link error
+  capture as the mail sibling.
+
+The image pipeline took the same treatment the markdown converter got in 2.5.0:
+its remediation wording was hardcoded to mail, so a group caller would have been
+told to run `get-mail-attachment --message-id`, which cannot address a post.
+Both hints are now supplied by the caller. Mail's output is unchanged.
+
+Command surface 192 -> 195.
+
+Worth stating plainly: no group on either the maintainer's or the requester's
+tenant has a post carrying an attachment, so the PDF and image paths ship
+covered by tests and never exercised against a real payload. The same was true
+of the attachment commands 2.5.0 shipped.
+
 ### Fixed: a re-bordered table names the property that changed
 
 `formatChanges` compared a property by its OWN attributes, which is all a
