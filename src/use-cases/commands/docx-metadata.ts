@@ -285,11 +285,19 @@ const extractMoves = (documentXml: string | undefined): ReadonlyArray<Move> => {
 // Compared by attributes as well as tag name: `w:color` is present on both
 // sides of a recolour and only its `w:val` moves, so a comparison of tag names
 // alone reports a recoloured run as unchanged.
+//
+// Reading a property's OWN attributes is not enough either. `w:tblBorders`, the
+// commonest table revision there is, carries nothing itself and hangs every
+// value off a child (`w:top`, `w:left`, ...), so an own-attributes comparison
+// signed both sides as the empty string and reported a re-bordered table as
+// unchanged. The signature therefore descends: a child element contributes its
+// own signature, recursively, and an array of repeated children contributes
+// each in order.
 const attrSignature = (value: unknown): string => {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return '';
+  if (value === null || typeof value !== 'object') return '';
+  if (Array.isArray(value)) return value.map((item) => attrSignature(item)).join(',');
   return Object.entries(value as Record<string, unknown>)
-    .filter(([key]) => key.startsWith('@_'))
-    .map(([key, attr]) => `${key}=${String(attr)}`)
+    .map(([key, child]) => (key.startsWith('@_') ? `${key}=${String(child)}` : `${key}{${attrSignature(child)}}`))
     .toSorted((a, b) => a.localeCompare(b))
     .join(';');
 };
@@ -333,10 +341,7 @@ const changesIn = (root: unknown, container: string, propsTag: string, changeTag
 // same walker reads all five, and the scope is what tells a reader whether a
 // reviewer restyled the whole table, one row, or one cell. Structural revisions
 // (`w:cellIns`, `w:cellDel`, `w:cellMerge`) carry no before/after pair and are
-// deliberately not reported here. Note the limit `attrSignature` imposes on all
-// five: a property whose values hang off child elements rather than its own
-// attributes (`w:tblBorders` is the common table case) compares as unchanged, so
-// the revision is reported with its author and scope but names no property.
+// deliberately not reported here.
 const extractFormatChanges = (root: unknown): ReadonlyArray<FormatChange> => [
   ...changesIn(root, 'w:r', 'w:rPr', 'w:rPrChange', 'run'),
   ...changesIn(root, 'w:p', 'w:pPr', 'w:pPrChange', 'paragraph'),

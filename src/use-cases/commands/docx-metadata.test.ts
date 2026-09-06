@@ -72,11 +72,11 @@ const buildCraftedDocx = async (): Promise<Uint8Array> => {
  * API for `w:tblPrChange` / `w:trPrChange` / `w:tcPrChange`, so the zip is
  * hand-rolled the way `buildCraftedDocx` above is, and for the same reason.
  * Three different authors, one per scope, so a change reported at the wrong
- * level is visible rather than merely miscounted. Each changed property is a
- * leaf carrying its own attributes (`w:tblW`, `w:trHeight`, `w:shd`), which is
- * what the shared attribute comparison can see: a nested container such as
- * `w:tblBorders`, whose values hang off child elements, compares as unchanged
- * and is reported with no property named.
+ * level is visible rather than merely miscounted. The table changes two
+ * properties of different shapes on purpose: `w:tblW` carries its values as its
+ * own attributes, while `w:tblBorders` hangs them off child elements, and only
+ * its `w:top` moves while `w:left` stays put. A comparison that reads a
+ * property's own attributes alone sees the second as unchanged.
  */
 const buildTableRevisionDocx = async (): Promise<Uint8Array> => {
   const zip = new JSZip();
@@ -89,8 +89,12 @@ const buildTableRevisionDocx = async (): Promise<Uint8Array> => {
     <w:tbl>
       <w:tblPr>
         <w:tblW w:w="9000" w:type="dxa"/>
+        <w:tblBorders><w:top w:val="double"/><w:left w:val="single"/></w:tblBorders>
         <w:tblPrChange w:id="800" w:author="Robin Chen" w:date="2026-05-01T00:00:00Z">
-          <w:tblPr><w:tblW w:w="5000" w:type="dxa"/></w:tblPr>
+          <w:tblPr>
+            <w:tblW w:w="5000" w:type="dxa"/>
+            <w:tblBorders><w:top w:val="single"/><w:left w:val="single"/></w:tblBorders>
+          </w:tblPr>
         </w:tblPrChange>
       </w:tblPr>
       <w:tr>
@@ -439,7 +443,7 @@ describe('extractDocxMetadata — moves and format changes', () => {
     const table = result.value.formatChanges.find((f) => f.scope === 'table');
     expect(table?.author).toBe('Robin Chen');
     expect(table?.date).toBe('2026-05-01T00:00:00Z');
-    expect(table?.properties).toEqual(['w:tblW']);
+    expect(table?.properties).toEqual(['w:tblBorders', 'w:tblW']);
   });
 
   it('reports a row whose height a reviewer changed under revision marking, scoped to the row', async () => {

@@ -36,8 +36,17 @@
  * points at the group route instead, stands on this evidence.
  *
  * Not established: whether this token can read anything on Graph at all. The
- * `/me` ladder below answers that, and needs one more capture (see the capture
- * note in `probe-outlook-scopes.ts`).
+ * `/me` ladder below answers that and needs one more capture, which five
+ * attempts across 2026-09-06 did not get.
+ *
+ * On CAPTURING the Graph-audience token, since that is the hard part. The appid
+ * emits bearers on nearly every load, but almost always for a NON-Graph
+ * audience; the Graph-audience mint happened only on the first cold start of
+ * the day. Waiting longer does not help, nor does reloading, nor does clearing
+ * the origin's localStorage / sessionStorage / IndexedDB to force MSAL to
+ * re-acquire (tried, and removed again for being dead weight). Treat the
+ * Graph mint as opportunistic: run this first thing, against a profile that has
+ * not opened Outlook yet that day.
  */
 
 import { join } from 'node:path';
@@ -96,8 +105,6 @@ const run = async (): Promise<number> => {
     console.log(`probe: captured a Graph bearer for appid ${OUTLOOK_APP_ID} (token not shown)`);
   });
 
-  // The SPA caches its bearer and re-mints only on some loads, so one visit is
-  // not enough: give EACH host its own window and reload inside it.
   for (const url of ['https://outlook.cloud.microsoft/mail/', OUTLOOK_URL]) {
     if (captured !== undefined) break;
     console.log(`probe: navigating to ${url} (window ${settleMs}ms)`);

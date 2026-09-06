@@ -2,6 +2,21 @@
 
 All notable changes to `ask-marcel-office-cli` are documented here.
 
+## Unreleased
+
+### Fixed: a re-bordered table names the property that changed
+
+`formatChanges` compared a property by its OWN attributes, which is all a
+`w:b` or a `w:color` has. `w:tblBorders` carries nothing itself and hangs every
+value off a child element, so both sides of a re-bordered table signed as the
+empty string and the revision was reported with its author and scope but no
+property named. That is the commonest table revision there is, shipped that way
+in 2.5.0 and recorded as a known limit at the time.
+
+The signature now descends into child elements, and into repeated children in
+order. The five scopes share this comparison, so runs and paragraphs gain the
+same reach; nothing about their existing output changed.
+
 ## 2.5.0
 
 ### Fixed: `help` costs the same whoever runs it

@@ -33,9 +33,13 @@
  * So the scope IS reachable. See `probe-outlook-shared-read.ts` for why that
  * does not settle the question, and why the answer is still no.
  *
- * Capture is intermittent: the SPA caches its bearer and re-mints roughly
- * hourly, so a run soon after a successful one sees nothing. That is the probe
- * working, not failing. Come back later.
+ * Capture is opportunistic, and this is the hard part. The appid emits bearers
+ * on nearly every load but almost always for a NON-Graph audience; across
+ * 2026-09-06 the Graph-audience mint happened only on the day's first cold
+ * start. Waiting longer does not help, nor does reloading, nor does clearing the
+ * origin's web storage to force MSAL to re-acquire. Run this first thing,
+ * against a profile that has not opened Outlook yet that day. A run that reports
+ * the appid with "(no Graph audience)" is this, not a broken probe.
  */
 
 import { join } from 'node:path';
