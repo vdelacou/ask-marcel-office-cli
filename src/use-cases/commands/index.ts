@@ -101,6 +101,7 @@ import * as convertLocalFile from './convert-local-file-to-markdown.ts';
 import * as extractLocalFileImages from './extract-local-file-images.ts';
 import * as convertMailAttachmentZip from './convert-mail-attachment-zip-to-markdown.ts';
 import * as extractSharepointLinksInDocuments from './extract-sharepoint-links-in-documents.ts';
+import * as extractSharepointLinksInGroupPost from './extract-sharepoint-links-in-group-post.ts';
 import * as extractSharepointLinksInMail from './extract-sharepoint-links-in-mail.ts';
 import * as listChats from './list-chats.ts';
 import * as getChat from './get-chat.ts';
@@ -253,6 +254,7 @@ const modules: Record<string, Command> = {
   'list-mail-rules': listMailRules,
   'get-mailbox-settings': getMailboxSettings,
   'search-mail-messages': searchMailMessages,
+  'extract-sharepoint-links-in-group-post': extractSharepointLinksInGroupPost,
   'extract-sharepoint-links-in-mail': extractSharepointLinksInMail,
   'extract-sharepoint-links-in-documents': extractSharepointLinksInDocuments,
   'convert-mail-to-markdown': convertMailToMarkdown,
