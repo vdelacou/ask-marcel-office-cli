@@ -115,6 +115,15 @@ const buildTableRevisionDocx = async (): Promise<Uint8Array> => {
         </w:tc>
       </w:tr>
     </w:tbl>
+    <w:p>
+      <w:pPr>
+        <w:tabs><w:tab w:val="left" w:pos="720"/><w:tab w:val="left" w:pos="2160"/></w:tabs>
+        <w:pPrChange w:id="803" w:author="Robin Chen" w:date="2026-05-04T00:00:00Z">
+          <w:pPr><w:tabs><w:tab w:val="left" w:pos="720"/><w:tab w:val="left" w:pos="1440"/></w:tabs></w:pPr>
+        </w:pPrChange>
+      </w:pPr>
+      <w:r><w:t>retabbed line</w:t></w:r>
+    </w:p>
   </w:body>
 </w:document>`
   );
@@ -453,6 +462,18 @@ describe('extractDocxMetadata — moves and format changes', () => {
     const row = result.value.formatChanges.find((f) => f.scope === 'row');
     expect(row?.author).toBe('Alex Kim');
     expect(row?.properties).toEqual(['w:trHeight']);
+  });
+
+  // `w:tabs` holds one `w:tab` per stop, so the parser hands back an ARRAY.
+  // Comparing arrays by identity, or signing only the first entry, reports a
+  // paragraph whose second tab stop moved as unchanged.
+  it('compares a property holding repeated children, so moving one tab stop is a change', async () => {
+    const result = await extractDocxMetadata(await buildTableRevisionDocx());
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const retabbed = result.value.formatChanges.find((f) => f.text === 'retabbed line');
+    expect(retabbed?.scope).toBe('paragraph');
+    expect(retabbed?.properties).toEqual(['w:tabs']);
   });
 
   it('reports a cell whose shading a reviewer changed under revision marking, scoped to the cell', async () => {
