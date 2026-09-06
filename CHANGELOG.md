@@ -4,6 +4,23 @@ All notable changes to `ask-marcel-office-cli` are documented here.
 
 ## 2.5.0
 
+### Fixed: `help` costs the same whoever runs it
+
+The top-level listing is compacted to fit an LLM's token budget, and then
+Commander sized its description column from `process.stdout.columns`, so the
+budget depended on the reader's terminal. Measured on this surface: 35 KB at 80
+columns, 64 KB at 100, 46 KB at 140, 39 KB at 200. Not even monotonic, so no
+width was safe to assume.
+
+The wrap width is now pinned at 80 and the listing is 35 KB everywhere.
+
+This also broke `npm publish`. The byte-count guard in `cli.test.ts` asserts the
+listing stays under 45 KB, and under CI or any piped run stdout is not a TTY, so
+Commander fell back to 80 and the guard passed. Run from an ordinary terminal at
+90 to 150 columns it failed, which is where most terminals sit. A new test
+renders the listing at four widths and asserts one size, so the guard can no
+longer measure a different thing for each reader.
+
 ### Fixed: the group conversation collections stop advertising a filter Graph refuses
 
 `list-group-threads` and `list-group-conversations` handed out the full OData

@@ -408,6 +408,38 @@ describe('buildCli command surface', () => {
     expect(compact.length).toBeLessThan(45 * 1024);
   });
 
+  // The ceiling guard above measured a moving target for two years. Commander
+  // sizes its description column from `process.stdout.columns`, and the byte
+  // count is not monotonic in width: on the 2.5.0 surface the same listing
+  // rendered 35 KB at 80 columns, 64 KB at 100 and 46 KB at 140. Under `bun
+  // test` in CI stdout is a pipe, so Commander fell back to 80 and the guard
+  // was always green; run from an ordinary interactive terminal it failed, and
+  // that is how a `npm publish` broke on 2026-09-06. A listing written to be
+  // read by an LLM on a token budget must cost the same whoever renders it.
+  it('renders the compact help listing at the same size whatever width the terminal reports', async () => {
+    const logger = createLoggerFake();
+    // Commander reads the width through `getOutHelpWidth`, which is
+    // `process.stdout.isTTY ? process.stdout.columns : undefined`
+    // (commander/lib/command.js). Under `bun test` stdout is a pipe, so both
+    // have to be stubbed or this test measures the 80-column fallback four
+    // times and passes against any bug.
+    const originalColumns = process.stdout.columns;
+    const originalIsTty = process.stdout.isTTY;
+    const sizes: Array<number> = [];
+    try {
+      process.stdout.isTTY = true;
+      for (const columns of [80, 100, 140, 200]) {
+        process.stdout.columns = columns;
+        const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake(), fs: createFileSystemFake() });
+        sizes.push((await captureStream('stdout', () => cli.parseAsync(['node', 'ask-marcel-office', 'help']))).length);
+      }
+    } finally {
+      process.stdout.columns = originalColumns;
+      process.stdout.isTTY = originalIsTty;
+    }
+    expect(sizes.every((size) => size === sizes[0])).toBe(true);
+  });
+
   it('--verbose is no longer a recognised top-level option (v1.4.0 surface-consolidation drop)', async () => {
     const logger = createLoggerFake();
     const cli = buildCli({ auth: okAuth(), graph: okGraph({}), logger, processRunner: createProcessRunnerFake(), fs: createFileSystemFake() });

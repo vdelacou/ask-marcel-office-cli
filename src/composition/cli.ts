@@ -142,6 +142,16 @@ const buildCli = (deps: BuildCliDeps): Command => {
     // `ask-marcel-office <cmd> --help` is untouched — Commander only consults
     // `subcommandDescription` when formatting parent's child list.
     .configureHelp({
+      // Pin the wrap width instead of inheriting `process.stdout.columns`.
+      // Commander sizes the description column from the terminal, and the
+      // resulting byte count is not monotonic in width: measured on the 2.5.0
+      // surface, `help` renders 35 KB at 80 columns, 64 KB at 100 and 46 KB at
+      // 140. This listing exists to be read by an LLM on a token budget, so its
+      // size must be a property of the command surface, not of whoever's
+      // terminal happens to be attached. It also made the byte-count guard in
+      // cli.test.ts pass in CI (stdout is a pipe, so Commander falls back to 80)
+      // and fail in any normal interactive terminal.
+      helpWidth: 80,
       subcommandDescription: (cmd) => firstSentence(cmd.description()),
     })
     .option(
