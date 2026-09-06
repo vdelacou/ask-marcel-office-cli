@@ -8,19 +8,20 @@ import { formatZodError } from './format-zod-error.ts';
 import { keepQuotedOption, keepQuotedSchemaField } from './mail-quote-stripper.ts';
 import type { ConversionHints } from './markdown-dispatch.ts';
 
-// A group post has no PDF-rendering sibling (`?format=pdf` would mean uploading
-// the bytes to the caller's own drive), so every unconvertible case routes to
-// the raw bytes instead. Borrowing the mail wording here would name commands
-// that cannot address a post at all.
+// Every hint names a command that can actually address a POST. Borrowing the
+// mail wording would name commands that cannot. The unconvertible cases route
+// to `convert-group-post-attachment-to-pdf` the way the mail and calendar
+// families route to theirs; the image case is the exception, because Graph's
+// `?format=pdf` rejects image inputs outright.
 const POST_HINTS: ConversionHints = {
   pdfNoText:
-    'pdf attachment has no extractable text layer — it looks scanned / image-only (only page images, no embedded text). Fetch the bytes with `get-group-post-attachment --output-path /tmp/file.pdf`, then read the PDF with a vision-capable model, or run OCR.',
+    'pdf attachment has no extractable text layer — it looks scanned / image-only (only page images, no embedded text). Use `convert-group-post-attachment-to-pdf --output-path /tmp/file.pdf` to land the bytes on disk, then read the PDF with a vision-capable model, or run OCR.',
   legacyPpt:
-    'ppt (legacy PowerPoint 97-2003, OLE binary) cannot be converted to markdown — there is no pure-JS parser for the format. Fetch the bytes with `get-group-post-attachment --output-path /tmp/deck.ppt` and convert them outside the CLI, or open the post in Outlook.',
+    'ppt (legacy PowerPoint 97-2003, OLE binary) cannot be converted to markdown — there is no pure-JS parser for the format. Use `convert-group-post-attachment-to-pdf --output-path /tmp/file.pdf` to render it, then read the PDF with a vision-capable model.',
   image: (ext) =>
-    `${ext} attachment is an image and cannot be converted to markdown. Use \`get-group-post-attachment\` to fetch the bytes (returned base64-encoded) and feed them into a vision-capable model directly — that's the right shape for image content.`,
+    `${ext} attachment is an image and cannot be converted to markdown. Use \`get-group-post-attachment\` to fetch the bytes (returned base64-encoded) and feed them into a vision-capable model directly — that's the right shape for image content. (\`convert-group-post-attachment-to-pdf\` is NOT a workaround: Graph's format=pdf rejects images with InputFormatNotSupported.)`,
   generic: (ext) =>
-    `${ext} attachment not supported by \`convert-group-post-attachment-to-markdown\`. Fetch the raw bytes with \`get-group-post-attachment\` (add \`--output-path\` to land them on disk) and handle the format outside the CLI.`,
+    `${ext} attachment not supported by \`convert-group-post-attachment-to-markdown\`. Use \`convert-group-post-attachment-to-pdf\` — Graph \`?format=pdf\` accepts 38 input extensions.`,
 };
 
 const schema = z.object({

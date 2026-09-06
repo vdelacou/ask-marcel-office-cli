@@ -92,13 +92,14 @@ describe('the remediation an unconvertible post attachment offers', () => {
     if (!result.ok) {
       expect(result.error).toMatchObject({ type: 'api_error', status: 415, code: 'unsupported_image' });
       expect(result.error.message).toContain('get-group-post-attachment');
+      // Named only to rule it out: Graph's format=pdf rejects image inputs.
+      expect(result.error.message).toContain('convert-group-post-attachment-to-pdf');
       expect(result.error.message).not.toContain('get-mail-attachment');
       expect(result.error.message).not.toContain('convert-mail-attachment-to-pdf');
     }
   });
 
-  // The mail and calendar families answer this one with their PDF sibling.
-  it('sends a legacy slide deck to the bytes as well, since a group post has no PDF sibling to offer', async () => {
+  it('sends a legacy slide deck to the post’s own PDF sibling, the way the mail and calendar families do', async () => {
     const { graph } = graphReturning(ok(fileAttachment('deck.ppt', 'legacy OLE bytes')));
 
     const result = await command.execute(graph, params);
@@ -106,13 +107,12 @@ describe('the remediation an unconvertible post attachment offers', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toMatchObject({ type: 'api_error', status: 415, code: 'unsupported_legacy_office' });
-      expect(result.error.message).toContain('get-group-post-attachment');
+      expect(result.error.message).toContain('convert-group-post-attachment-to-pdf');
       expect(result.error.message).not.toContain('convert-mail-attachment-to-pdf');
-      expect(result.error.message).not.toContain('convert-group-post-attachment-to-pdf');
     }
   });
 
-  it('sends a format it cannot read at all to the bytes, naming no mail command', async () => {
+  it('sends a format it cannot read at all to the post’s PDF sibling, naming no mail command', async () => {
     const { graph } = graphReturning(ok(fileAttachment('vendor.dat', BINARY)));
 
     const result = await command.execute(graph, params);
@@ -120,7 +120,7 @@ describe('the remediation an unconvertible post attachment offers', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toMatchObject({ type: 'api_error', status: 415, code: 'unsupported_format' });
-      expect(result.error.message).toContain('get-group-post-attachment');
+      expect(result.error.message).toContain('convert-group-post-attachment-to-pdf');
       expect(result.error.message).not.toContain('convert-mail-attachment');
     }
   });

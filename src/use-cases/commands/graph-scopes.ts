@@ -168,6 +168,7 @@ const GRAPH_SCOPES_BY_COMMAND: Readonly<Record<string, ReadonlyArray<string>>> =
   'list-group-post-attachments': ['Group.Read.All'],
   'get-group-post-attachment': ['Group.Read.All'],
   'convert-group-post-attachment-to-markdown': ['Group.Read.All'],
+  'convert-group-post-attachment-to-pdf': ['Group.Read.All', 'Files.ReadWrite'],
 
   // — Notes (OneNote) —
   'list-onenote-notebooks': ['Notes.Read'],
